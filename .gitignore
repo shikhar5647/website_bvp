@@ -1,1 +1,55 @@
+# ── Node ──────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# ── Environment / Secrets ─────────────────────────────────────────
 .env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+
+# ── React build output ────────────────────────────────────────────
+frontend/build/
+frontend/.cache/
+
+# ── OS files ──────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+# ── Logs ──────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Vercel ────────────────────────────────────────────────────────
+.vercel/
+
+# ── Misc ──────────────────────────────────────────────────────────
+.nyc_output/
+coverage/
+dist/
+tmp/
