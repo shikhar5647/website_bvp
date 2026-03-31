@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { reportAPI } from '../utils/api';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '/src/context/AuthContext';
 import toast from 'react-hot-toast';
 import './ReportsPage.css';
  
