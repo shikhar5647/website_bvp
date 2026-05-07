@@ -33,6 +33,7 @@ const BRANCHES = [
   { sno: 31, district: 'Sirohi',    brNo: 2, branch: 'Pindwara',          members2024: 78,  target2025: 90,  gvcaSchools: 15, bkjSchools: 15, ngscSchools: 5,  plantation: 500 },
   { sno: 32, district: 'Sirohi',    brNo: 3, branch: 'Aburoad',           members2024: 50,  target2025: 60,  gvcaSchools: 5,  bkjSchools: 5,  ngscSchools: 3,  plantation: 500 },
   { sno: 33, district: 'Sirohi',    brNo: 4, branch: 'Mount Abu',         members2024: 45,  target2025: 55,  gvcaSchools: 5,  bkjSchools: 5,  ngscSchools: 3,  plantation: 200 },
+  { sno: 34, district: 'Pali',      brNo: 6, branch: 'Vivekanand Shakha Pali', members2024: 0, target2025: 0, gvcaSchools: 0, bkjSchools: 0, ngscSchools: 0, plantation: 0 },
 ];
  
 const DISTRICTS = [...new Set(BRANCHES.map(b => b.district))];

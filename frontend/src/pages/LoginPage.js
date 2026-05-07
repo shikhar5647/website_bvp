@@ -9,7 +9,7 @@ const BRANCH_NAMES = [
   'Jalore','Bhinmal','Ahore','Sayala','Sanchore Main','VU Sanchore',
   'Jodhpur Main','Jodhpur Marwar','Nandanvan','Saraswati Nagar','Ratanada','Paota',
   'Suryanagari','Mathaniya','Osian','Pipar Nagar','Bap','Phalodi',
-  'Pali','Sojat','Sumerpur Sheoganj','Falna Bali','Sadri',
+  'Pali','Sojat','Sumerpur Sheoganj','Falna Bali','Sadri','Vivekanand Shakha Pali',
   'Devnagri Sirohi','Pindwara','Aburoad','Mount Abu',
 ];
  
