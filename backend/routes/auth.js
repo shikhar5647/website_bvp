@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { generateToken, authMiddleware, requireRole } = require('../middleware/auth');
-const { BRANCH_NAMES, PRANT_NAME } = require('backend/config/branches');
+const { BRANCH_NAMES } = require('../config/branches');
 const fs = require('fs');
 const path = require('path');
  

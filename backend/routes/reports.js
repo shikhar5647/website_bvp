@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Report = require('../models/Report');
 const { authMiddleware, requireRole } = require('../middleware/auth');
-const { BRANCHES, BRANCH_NAMES, MONTHS } = require('backend/config/branches');
+const { BRANCHES, BRANCH_NAMES, MONTHS } = require('../config/branches');
  
 // GET /api/reports/branches — public config endpoint
 router.get('/branches', (req, res) => {
@@ -34,7 +34,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
  
 // GET single report
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res, next) => {
   try {
     if (req.params.id === 'analytics') return next();
     const report = await Report.findById(req.params.id);
