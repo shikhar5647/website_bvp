@@ -7,6 +7,46 @@ const MONTHS = ['April','May','June','July','August','September','October','Nove
 const YEARS = [2023, 2024, 2025, 2026];
 const defaultMeeting = { date: '', participants: 0 };
 
+// Branch data from backend config
+const BRANCHES = [
+  { district: 'Barmer',    branch: 'Barmer Main' },
+  { district: 'Barmer',    branch: 'VDR Barmer' },
+  { district: 'Barmer',    branch: 'Gudamalani' },
+  { district: 'Balotra',   branch: 'Balotra' },
+  { district: 'Jaisalmer', branch: 'Jaisalmer' },
+  { district: 'Jaisalmer', branch: 'Pokaran' },
+  { district: 'Jalore',    branch: 'Jalore' },
+  { district: 'Jalore',    branch: 'Bhinmal' },
+  { district: 'Jalore',    branch: 'Ahore' },
+  { district: 'Jalore',    branch: 'Sayala' },
+  { district: 'Jalore',    branch: 'Sanchore Main' },
+  { district: 'Jalore',    branch: 'VU Sanchore' },
+  { district: 'Jodhpur',   branch: 'Jodhpur Main' },
+  { district: 'Jodhpur',   branch: 'Jodhpur Marwar' },
+  { district: 'Jodhpur',   branch: 'Nandanvan' },
+  { district: 'Jodhpur',   branch: 'Saraswati Nagar' },
+  { district: 'Jodhpur',   branch: 'Ratanada' },
+  { district: 'Jodhpur',   branch: 'Paota' },
+  { district: 'Jodhpur',   branch: 'Suryanagari' },
+  { district: 'Jodhpur',   branch: 'Mathaniya' },
+  { district: 'Jodhpur',   branch: 'Osian' },
+  { district: 'Jodhpur',   branch: 'Pipar Nagar' },
+  { district: 'Phalodi',   branch: 'Bap' },
+  { district: 'Phalodi',   branch: 'Phalodi' },
+  { district: 'Pali',      branch: 'Pali' },
+  { district: 'Pali',      branch: 'Sojat' },
+  { district: 'Pali',      branch: 'Sumerpur Sheoganj' },
+  { district: 'Pali',      branch: 'Falna Bali' },
+  { district: 'Pali',      branch: 'Sadri' },
+  { district: 'Sirohi',    branch: 'Devnagri Sirohi' },
+  { district: 'Sirohi',    branch: 'Pindwara' },
+  { district: 'Sirohi',    branch: 'Aburoad' },
+  { district: 'Sirohi',    branch: 'Mount Abu' },
+  { district: 'Pali',      branch: 'Vivekanand Shakha Pali' },
+];
+const PRANT_NAME = 'Rajasthan Pashchim';
+const DISTRICTS = [...new Set(BRANCHES.map(b => b.district))];
+
 const initialForm = {
   branchName: '', prantName: '', districtName: '', panOfBranch: '',
   reportMonth: 'December', reportYear: 2025,
@@ -324,22 +364,61 @@ export default function DataEntryPage() {
             <div className="ss-form-card">
               <div className="ss-form-card-title">Branch Details</div>
               <div className="ss-field-grid">
-                {[
-                  ['Branch Name *','branchName','e.g. Jodhpur Marwar'],
-                  ['Prant Name *','prantName','e.g. Rajasthan Pashchim'],
-                  ['District Name *','districtName','e.g. Jodhpur'],
-                  ['PAN of Branch','panOfBranch','e.g. AAHB5817C'],
-                ].map(([label, key, ph]) => (
-                  <div className="ss-field" key={key}>
-                    <label className="ss-field-label">{label}</label>
-                    <input
-                      className="ss-text-input"
-                      value={form[key]}
-                      onChange={e => set(key, e.target.value)}
-                      placeholder={ph}
-                    />
-                  </div>
-                ))}
+                <div className="ss-field">
+                  <label className="ss-field-label">Shakha (Branch) Name *</label>
+                  <select
+                    className="ss-text-input"
+                    value={form.branchName}
+                    onChange={e => {
+                      const selected = e.target.value;
+                      const match = BRANCHES.find(b => b.branch === selected);
+                      setForm(prev => ({
+                        ...prev,
+                        branchName: selected,
+                        districtName: match ? match.district : prev.districtName,
+                        prantName: selected ? PRANT_NAME : prev.prantName,
+                      }));
+                    }}
+                  >
+                    <option value="">-- Select Shakha --</option>
+                    {BRANCHES.map(b => (
+                      <option key={b.branch} value={b.branch}>{b.branch}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="ss-field">
+                  <label className="ss-field-label">District Name *</label>
+                  <select
+                    className="ss-text-input"
+                    value={form.districtName}
+                    onChange={e => set('districtName', e.target.value)}
+                  >
+                    <option value="">-- Select District --</option>
+                    {DISTRICTS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="ss-field">
+                  <label className="ss-field-label">Prant Name *</label>
+                  <select
+                    className="ss-text-input"
+                    value={form.prantName}
+                    onChange={e => set('prantName', e.target.value)}
+                  >
+                    <option value="">-- Select Prant --</option>
+                    <option value={PRANT_NAME}>{PRANT_NAME}</option>
+                  </select>
+                </div>
+                <div className="ss-field">
+                  <label className="ss-field-label">PAN of Branch</label>
+                  <input
+                    className="ss-text-input"
+                    value={form.panOfBranch}
+                    onChange={e => set('panOfBranch', e.target.value)}
+                    placeholder="e.g. AAHB5817C"
+                  />
+                </div>
                 <div className="ss-field">
                   <label className="ss-field-label">Report Month</label>
                   <select className="ss-text-input" value={form.reportMonth} onChange={e => set('reportMonth', e.target.value)}>
