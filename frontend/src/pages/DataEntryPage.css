@@ -695,6 +695,227 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Action Buttons (Print / CSV) ────────────────────────────────────────── */
+.ss-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #fff;
+  color: #3c4043;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.ss-action-btn:hover {
+  background: #f1f3f4;
+  border-color: #bbb;
+}
+
+.ss-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Print Report View ───────────────────────────────────────────────────── */
+.print-report {
+  background: #fff;
+  padding: 32px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.print-header {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid #1B2A3B;
+}
+
+.print-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1B2A3B;
+  margin: 0 0 4px;
+}
+
+.print-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #FF6B00;
+  margin: 0;
+}
+
+.print-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #444;
+}
+
+.print-meta span {
+  background: #f8f9fa;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.print-meta strong {
+  color: #1B2A3B;
+}
+
+/* ── Print Sheet ─────────────────────────────────────────────────────────── */
+.print-sheet {
+  margin-bottom: 24px;
+  break-inside: avoid;
+}
+
+.print-sheet-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(to right, #1B2A3B, #243447);
+  padding: 10px 16px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid #FF6B00;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dadce0;
+  font-size: 12px;
+}
+
+.print-th {
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5f6368;
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.print-th-label {
+  text-align: left;
+  min-width: 140px;
+  background: #f1f3f4;
+}
+
+.print-th-total {
+  background: #fff3e0;
+  color: #e65100;
+  font-weight: 800;
+}
+
+.print-td {
+  padding: 6px 12px;
+  border: 1px solid #e8eaed;
+  text-align: center;
+  font-size: 12px;
+  color: #202124;
+}
+
+.print-td-label {
+  text-align: left;
+  font-weight: 600;
+  color: #3c4043;
+  background: #fafbfc;
+}
+
+.print-td-total {
+  font-weight: 800;
+  color: #e65100;
+  background: rgba(255, 243, 224, 0.3);
+}
+
+/* ── No-Print utility ────────────────────────────────────────────────────── */
+.no-print {}
+
+/* ── Print media query ───────────────────────────────────────────────────── */
+@media print {
+  body { background: #fff !important; }
+
+  .ss-topbar,
+  .ss-tab-bar,
+  .ss-bottom-nav,
+  .no-print,
+  nav,
+  .navbar {
+    display: none !important;
+  }
+
+  .print-report {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .print-header {
+    border-bottom-width: 2px;
+  }
+
+  .print-sheet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-table {
+    font-size: 10px;
+  }
+
+  .print-th { padding: 5px 8px; font-size: 9px; }
+  .print-td { padding: 4px 8px; font-size: 10px; }
+
+  .print-sheet-title {
+    background: #1B2A3B !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-th, .print-th-label, .print-th-total,
+  .print-td-label, .print-td-total {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ── Select Dropdown (branch/district/prant) ─────────────────────────────── */
+.ss-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+  background: #fafafa;
+  outline: none;
+  transition: all 0.15s;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.ss-select:focus {
+  border-color: #1a73e8;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
 /* ── Scrolled shadow on frozen columns ───────────────────────────────────── */
 .ss-scrolled .ss-td-frozen,
 .ss-scrolled .ss-th-frozen {
