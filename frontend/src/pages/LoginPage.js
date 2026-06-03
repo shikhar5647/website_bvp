@@ -59,8 +59,8 @@ export default function LoginPage() {
       <div className="login-card fade-in">
         <div className="login-header">
           <div className="login-emblem"><span>BVP</span></div>
-          <h1>Bharat Vikas Parishad</h1>
-          <p>Rajasthan Pashchim — Branch Report Portal</p>
+          <h1>BVP Paschim Prant</h1>
+          <p>Shakha Masik Prativedan — Branch Report Portal</p>
         </div>
  
         <div className="login-tabs">

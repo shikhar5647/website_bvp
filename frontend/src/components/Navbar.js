@@ -37,8 +37,8 @@ export default function Navbar() {
           <div className="navbar-brand">
             <div className="brand-emblem"><span>BVP</span></div>
             <div className="brand-text">
-              <span className="brand-title">Bharat Vikas Parishad</span>
-              <span className="brand-sub">Branch Report Portal</span>
+              <span className="brand-title">BVP Paschim Prant</span>
+              <span className="brand-sub">Shakha Masik Prativedan</span>
             </div>
           </div>
  
