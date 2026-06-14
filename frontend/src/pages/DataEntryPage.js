@@ -592,7 +592,6 @@ export default function DataEntryPage() {
   // ── Print overlay — matches the Excel template layout ──────────────────────
   if (showPrint) {
     const printData = getPrintData();
-    const achPct = (val, target) => target > 0 ? `${((val / target) * 100).toFixed(1)}%` : '--';
     return (
       <div className="print-report">
         <div className="print-header">

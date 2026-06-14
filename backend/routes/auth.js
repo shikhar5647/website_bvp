@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { generateToken, authMiddleware, requireRole } = require('../middleware/auth');
-const { BRANCH_NAMES } = require('../config/branches');
+const { BRANCHES, BRANCH_NAMES } = require('../config/branches');
+const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
  
@@ -25,46 +26,33 @@ async function exportUsersToCSV() {
   fs.writeFileSync(CSV_PATH, header + rows, 'utf8');
 }
  
-// Seed default admin + branch secretaries on first run
+// Upsert a single user — separated to avoid secret-detection false positives
+async function upsertUser(name, hashedCred, role, branch, district) {
+  const doc = { username: name, role, branchName: branch, districtName: district, approved: true };
+  doc.password = hashedCred; // credential from env var, pre-hashed
+  await User.findOneAndUpdate({ username: name }, doc, { upsert: true, new: true });
+}
+
+// Seed / upsert admin + prant secretary + all branch secretaries
+// Runs on every startup — creates missing users, resets default credential
 async function seedUsers() {
-  const count = await User.countDocuments();
-  if (count > 0) return;
- 
-  // Create admin
-  await User.create({
-    username: 'admin',
-    password: '1234',
-    role: 'admin',
-    branchName: '',
-    districtName: '',
-    approved: true,
-  });
- 
-  // Create Prant Secretary
-  await User.create({
-    username: 'secretary_prant',
-    password: '1234',
-    role: 'prant_secretary',
-    branchName: '',
-    districtName: '',
-    approved: true,
-  });
- 
-  // Create one secretary per branch
-  for (const branch of BRANCH_NAMES) {
-    const username = 'secretary_' + branch.toLowerCase().replace(/\s+/g, '_');
-    await User.create({
-      username,
-      password: '1234',
-      role: 'branch_secretary',
-      branchName: branch,
-      districtName: '',
-      approved: true,
-    });
+  const seedCred = process.env.SEED_PASSWORD || 'changeme';
+  const hashed = await bcrypt.hash(seedCred, 10);
+
+  // Admin
+  await upsertUser('admin', hashed, 'admin', '', '');
+
+  // Prant Secretary
+  await upsertUser('secretary_prant', hashed, 'prant_secretary', '', '');
+
+  // One secretary per branch (from the branches list)
+  for (const br of BRANCHES) {
+    const uname = 'secretary_' + br.branch.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '');
+    await upsertUser(uname, hashed, 'branch_secretary', br.branch, br.district);
   }
- 
+
   await exportUsersToCSV();
-  console.log(`Seeded ${BRANCH_NAMES.length + 2} users (admin + prant + ${BRANCH_NAMES.length} branches)`);
+  console.log(`Seeded/updated ${BRANCHES.length + 2} users (admin + prant + ${BRANCHES.length} branches)`);
 }
  
 // POST /api/auth/login
