@@ -1,6 +1,4 @@
 {
-  "outputDirectory": "frontend/build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "buildCommand": "echo 'No build needed at repo root'",
+  "outputDirectory": "."
 }
