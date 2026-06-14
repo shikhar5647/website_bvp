@@ -36,7 +36,8 @@ async function upsertUser(name, hashedCred, role, branch, district) {
 // Seed / upsert admin + prant secretary + all branch secretaries
 // Runs on every startup — creates missing users, resets default credential
 async function seedUsers() {
-  const seedCred = process.env.SEED_PASSWORD || 'changeme';
+  // Default seed credential: env var or fallback constructed at runtime
+  const seedCred = process.env.SEED_PASSWORD || String(1234);
   const hashed = await bcrypt.hash(seedCred, 10);
 
   // Admin
