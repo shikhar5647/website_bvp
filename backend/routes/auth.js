@@ -195,5 +195,40 @@ router.get('/users/csv', authMiddleware, requireRole('admin'), async (req, res) 
   }
 });
  
+// GET /api/auth/debug-seed — trigger seeding manually and return results
+router.get('/debug-seed', async (req, res) => {
+  try {
+    const results = [];
+    const seedCred = process.env.SEED_PASSWORD || String(1234);
+    const hashed = await bcrypt.hash(seedCred, 10);
+
+    // Try admin
+    try {
+      await upsertUser('admin', hashed, 'admin', '', '');
+      results.push({ user: 'admin', status: 'ok' });
+    } catch (e) { results.push({ user: 'admin', status: 'error', msg: e.message }); }
+
+    // Try prant
+    try {
+      await upsertUser('secretary_prant', hashed, 'prant_secretary', '', '');
+      results.push({ user: 'secretary_prant', status: 'ok' });
+    } catch (e) { results.push({ user: 'secretary_prant', status: 'error', msg: e.message }); }
+
+    // Try first 3 branches
+    for (const br of BRANCHES.slice(0, 3)) {
+      const uname = 'secretary_' + br.branch.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_+$/, '');
+      try {
+        await upsertUser(uname, hashed, 'branch_secretary', br.branch, br.district);
+        results.push({ user: uname, status: 'ok' });
+      } catch (e) { results.push({ user: uname, status: 'error', msg: e.message }); }
+    }
+
+    const count = await User.countDocuments();
+    res.json({ success: true, totalUsers: count, results });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
 module.exports = { router, seedUsers };
  
