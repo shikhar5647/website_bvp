@@ -96,6 +96,8 @@ const initialForm = {
     parinda_prev:0,        parinda_curr:0,
     kundi_prev:0,          kundi_curr:0,
     chara_prev:0,          chara_curr:0,
+    dana_prev:0,           dana_curr:0,
+    others_prev:0,         others_curr:0,
   },
   mahilaSahbhagita: {
     betiPadhao:    { prev_programmes:0, prev_participants:0, curr_programmes:0, curr_participants:0 },
@@ -107,6 +109,10 @@ const initialForm = {
                      curr_beauty_centers:0, curr_beauty_beneficiary:0 },
     baalSanskar:   { prev_shivir_duration:0, prev_activities:0, prev_presence:0,
                      curr_shivir_duration:0, curr_activities:0, curr_presence:0 },
+    abhiruchi:     { prev_shivir:0, prev_activities:0, prev_beneficiary:0,
+                     prev_atm_activities:0, prev_atm_beneficiary:0,
+                     curr_shivir:0, curr_activities:0, curr_beneficiary:0,
+                     curr_atm_activities:0, curr_atm_beneficiary:0 },
     familyAdoption:{ prev_families:0, prev_family_beneficiary:0, prev_family_amount:0,
                      prev_girl_beneficiary:0, prev_girl_amount:0,
                      curr_families:0, curr_family_beneficiary:0, curr_family_amount:0,
@@ -117,6 +123,8 @@ const initialForm = {
     samuhikVivah:  { prev_vivah:0, prev_pairs:0, curr_vivah:0, curr_pairs:0 },
     bvpSthapnaDiwas:{ prev_programmes:0, prev_participants:0, curr_programmes:0, curr_participants:0 },
     vichargosthi:  { prev_programmes:0, prev_participants:0, curr_programmes:0, curr_participants:0 },
+    education:     { prev_computer_centers:0, prev_computer_beneficiary:0, prev_library_centers:0, prev_library_beneficiary:0,
+                     curr_computer_centers:0, curr_computer_beneficiary:0, curr_library_centers:0, curr_library_beneficiary:0 },
     navVarsh:      { prev_programmes:0, prev_activities:0, prev_presence:0, curr_programmes:0, curr_activities:0, curr_presence:0 },
     ekShakha:      { prev_programmes:0, prev_beneficiaries:0, prev_amount:0, curr_programmes:0, curr_beneficiaries:0, curr_amount:0 },
   },
@@ -252,61 +260,57 @@ function Sheet({ title, subtitle, columns, rows, className }) {
   );
 }
 
-// ── Print Section Table (matches Excel template: multi-column grouped layout) ─
-function PrintSectionTable({ projects, prevLabel, currMonth, subCols }) {
-  const cols = subCols || ['Value'];
-  return (
-    <table className="print-table">
-      <thead>
-        <tr>
-          <th className="print-th print-th-label" rowSpan="2">Projects</th>
-          <th className="print-th print-th-prev" colSpan={cols.length}>{prevLabel}</th>
-          <th className="print-th print-th-curr" colSpan={cols.length}>{currMonth}</th>
-          <th className="print-th print-th-total" colSpan={cols.length}>Cumulative Total</th>
-        </tr>
-        <tr>
-          {[0,1,2].map(g => (
-            cols.map((sc, i) => (
-              <th key={`${g}-${i}`} className={`print-th${g===2?' print-th-total':g===0?' print-th-prev':' print-th-curr'}`}>{sc}</th>
-            ))
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {projects.map((proj, ri) => (
-          <tr key={ri} className={proj.isTotal ? 'print-tr-total' : ''}>
-            <td className="print-td print-td-label">{proj.label}</td>
-            {proj.prev.map((v, i) => <td key={`p${i}`} className="print-td print-td-prev">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-            {proj.curr.map((v, i) => <td key={`c${i}`} className="print-td print-td-curr">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-            {proj.total.map((v, i) => <td key={`t${i}`} className="print-td print-td-total">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+// ── Excel-style Combined Section Table ──────────────────────────────────────
+// Matches Excel: one table per section, each project has sub-header row + data row
+function PrintCombinedTable({ tables, prevLabel, currMonth }) {
+  // Find max sub-columns across all tables in this section
+  const maxCols = Math.max(...tables.map(t => (t.subCols || ['']).length));
 
-// ── Simple Print Table (for primary info, financial, etc.) ──────────────────
-function PrintSimpleTable({ columns, rows }) {
   return (
     <table className="print-table">
       <thead>
         <tr>
-          {columns.map((col, i) => (
-            <th key={i} className={`print-th${col.isTotal ? ' print-th-total' : ''}${col.isLabel ? ' print-th-label' : ''}`}>{col.label}</th>
-          ))}
+          <th className="print-th print-th-label">Projects</th>
+          <th className="print-th print-th-prev" colSpan={maxCols}>{prevLabel}</th>
+          <th className="print-th print-th-curr" colSpan={maxCols}>{currMonth}</th>
+          <th className="print-th print-th-total" colSpan={maxCols}>Cumulative Total</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, ri) => (
-          <tr key={ri} className={row.isTotal ? 'print-tr-total' : ''}>
-            {row.cells.map((cell, ci) => (
-              <td key={ci} className={`print-td${columns[ci]?.isTotal ? ' print-td-total' : ''}${columns[ci]?.isLabel ? ' print-td-label' : ''}`}>
-                {typeof cell === 'number' ? cell.toLocaleString() : cell}
-              </td>
-            ))}
-          </tr>
-        ))}
+        {tables.map((table, ti) => {
+          const sc = table.subCols || ['Value'];
+          const pad = maxCols - sc.length;
+          return (
+            <React.Fragment key={ti}>
+              {/* Sub-column header row */}
+              <tr className="print-tr-subheader">
+                <td className="print-td print-td-label print-td-project">{table.title}</td>
+                {[0,1,2].map(g => (
+                  <React.Fragment key={g}>
+                    {sc.map((c, i) => (
+                      <td key={`${g}-${i}`} className={`print-td print-td-subhdr${g===2?' print-td-total':g===0?' print-td-prev':' print-td-curr'}`}>{c}</td>
+                    ))}
+                    {Array.from({length: pad}).map((_, i) => (
+                      <td key={`${g}-pad-${i}`} className="print-td"></td>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tr>
+              {/* Data rows */}
+              {table.projects.map((proj, pi) => (
+                <tr key={`d${ti}-${pi}`}>
+                  <td className="print-td print-td-label">{table.projects.length > 1 ? proj.label : ''}</td>
+                  {proj.prev.map((v, i) => <td key={`p${i}`} className="print-td print-td-prev">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
+                  {Array.from({length: pad}).map((_, i) => <td key={`pp${i}`} className="print-td"></td>)}
+                  {proj.curr.map((v, i) => <td key={`c${i}`} className="print-td print-td-curr">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
+                  {Array.from({length: pad}).map((_, i) => <td key={`cp${i}`} className="print-td"></td>)}
+                  {proj.total.map((v, i) => <td key={`t${i}`} className="print-td print-td-total">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
+                  {Array.from({length: pad}).map((_, i) => <td key={`tp${i}`} className="print-td"></td>)}
+                </tr>
+              ))}
+            </React.Fragment>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -530,8 +534,8 @@ export default function DataEntryPage() {
       { title: 'Environment', subCols: ['Tree Plantation','Tulsi Podha','Cloth Bags','Seminars','Seminar Presence'], projects: [
         mkRow('Environment', [ev.treePlantation_prev, ev.tulsiPodha_prev, ev.clothBags_prev, ev.seminars_prev, ev.seminar_presence_prev], [ev.treePlantation_curr, ev.tulsiPodha_curr, ev.clothBags_curr, ev.seminars_curr, ev.seminar_presence_curr]),
       ]},
-      { title: 'Animal Sewa (Jeevdaya)', subCols: ['Parinda','Kundi','Chara'], projects: [
-        mkRow('Animal Sewa', [ev.parinda_prev, ev.kundi_prev, ev.chara_prev], [ev.parinda_curr, ev.kundi_curr, ev.chara_curr]),
+      { title: 'Animal Sewa (Jeevdaya)', subCols: ['Parinda','Kundi','Chara','Dana','Others'], projects: [
+        mkRow('Animal Sewa', [ev.parinda_prev, ev.kundi_prev, ev.chara_prev, ev.dana_prev, ev.others_prev], [ev.parinda_curr, ev.kundi_curr, ev.chara_curr, ev.dana_curr, ev.others_curr]),
       ]},
     ]});
 
@@ -549,6 +553,9 @@ export default function DataEntryPage() {
       { title: 'Baal Sanskar', subCols: ['Shivir Duration','No of Activities','Presence'], projects: [
         mkRow('Baal Sanskar', [mh.baalSanskar.prev_shivir_duration, mh.baalSanskar.prev_activities, mh.baalSanskar.prev_presence], [mh.baalSanskar.curr_shivir_duration, mh.baalSanskar.curr_activities, mh.baalSanskar.curr_presence]),
       ]},
+      { title: 'Abhiruchi & Atmraksha Shivir', subCols: ['Abhiruchi Shivir','Activities','Beneficiary','Atmraksha Activities','Atmraksha Beneficiary'], projects: [
+        mkRow('Abhiruchi & Atmraksha', [mh.abhiruchi.prev_shivir, mh.abhiruchi.prev_activities, mh.abhiruchi.prev_beneficiary, mh.abhiruchi.prev_atm_activities, mh.abhiruchi.prev_atm_beneficiary], [mh.abhiruchi.curr_shivir, mh.abhiruchi.curr_activities, mh.abhiruchi.curr_beneficiary, mh.abhiruchi.curr_atm_activities, mh.abhiruchi.curr_atm_beneficiary]),
+      ]},
       { title: 'Adoption Projects', subCols: ['Families','Family Beneficiary','Family Amount','Girl Beneficiary','Girl Amount'], projects: [
         mkRow('Adoption', [mh.familyAdoption.prev_families, mh.familyAdoption.prev_family_beneficiary, mh.familyAdoption.prev_family_amount, mh.familyAdoption.prev_girl_beneficiary, mh.familyAdoption.prev_girl_amount], [mh.familyAdoption.curr_families, mh.familyAdoption.curr_family_beneficiary, mh.familyAdoption.curr_family_amount, mh.familyAdoption.curr_girl_beneficiary, mh.familyAdoption.curr_girl_amount]),
       ]},
@@ -563,6 +570,9 @@ export default function DataEntryPage() {
       ]},
       { title: 'Samuhik Saral Vivah', subCols: ['Vivah','Pairs'], projects: [
         mkRow('Samuhik Vivah', [sp.samuhikVivah.prev_vivah, sp.samuhikVivah.prev_pairs], [sp.samuhikVivah.curr_vivah, sp.samuhikVivah.curr_pairs]),
+      ]},
+      { title: 'Education', subCols: ['Computer Centre','Computer Beneficiary','Library Centre','Library Beneficiary'], projects: [
+        mkRow('Education', [sp.education.prev_computer_centers, sp.education.prev_computer_beneficiary, sp.education.prev_library_centers, sp.education.prev_library_beneficiary], [sp.education.curr_computer_centers, sp.education.curr_computer_beneficiary, sp.education.curr_library_centers, sp.education.curr_library_beneficiary]),
       ]},
       { title: 'Nav Varsh & Inspiring Events', subCols: ['Programmes','No of Activities','Presence'], projects: [
         mkRow('Nav Varsh', [sp.navVarsh.prev_programmes, sp.navVarsh.prev_activities, sp.navVarsh.prev_presence], [sp.navVarsh.curr_programmes, sp.navVarsh.curr_activities, sp.navVarsh.curr_presence]),
@@ -597,47 +607,64 @@ export default function DataEntryPage() {
           </div>
         </div>
 
-        {/* 1. Primary Information */}
+        {/* 1. Primary Information — matches Excel layout */}
         <div className="print-section">
           <div className="print-section-title">1. Primary Information</div>
-          <PrintSimpleTable
-            columns={[
-              { label: '', isLabel: true },
-              { label: `${form.reportYear-1}-${String(form.reportYear).slice(2)} Members` },
-              { label: `${form.reportYear-1}-${String(form.reportYear).slice(2)} Contribution` },
-              { label: `Target ${form.reportYear}-${String(form.reportYear+1).slice(2)} Members` },
-              { label: `Target Contribution` },
-              { label: 'Till Date Members', isTotal: true },
-              { label: 'Till Date Contribution', isTotal: true },
-              { label: 'Achievement %', isTotal: true },
-            ]}
-            rows={[{
-              cells: ['Membership', pi.year2024_25_members, `Rs ${pi.year2024_25_contribution.toLocaleString()}`, pi.target2025_26_members, `Rs ${pi.target2025_26_contribution.toLocaleString()}`, pi.tillDate_members, `Rs ${pi.tillDate_contribution.toLocaleString()}`, achPct(pi.tillDate_members, pi.target2025_26_members)],
-            }]}
-          />
-          <PrintSimpleTable
-            columns={[
-              { label: '', isLabel: true },
-              { label: 'Vikas Mitra (31.03)' }, { label: 'Vikas Mitra Till Date' },
-              { label: 'Vikas Ratna (31.03)' }, { label: 'Vikas Ratna Till Date' },
-              { label: 'Cash Balance' }, { label: 'Bank Balance' }, { label: 'Total FD' },
-            ]}
-            rows={[{
-              cells: ['Financial', pi.vikasMitra_base, pi.vikasMitra_tillDate, pi.vikasRatna_base, pi.vikasRatna_tillDate, `Rs ${pi.cashBalance.toLocaleString()}`, `Rs ${pi.bankBalance1.toLocaleString()}`, `Rs ${pi.bankBalance2.toLocaleString()}`],
-            }]}
-          />
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th className="print-th print-th-label" rowSpan="2"></th>
+                <th className="print-th print-th-prev" colSpan="2">{form.reportYear-1}-{String(form.reportYear).slice(2)}</th>
+                <th className="print-th" colSpan="2">Target {form.reportYear}-{String(form.reportYear+1).slice(2)}</th>
+                <th className="print-th print-th-curr" colSpan="2">Till Date</th>
+                <th className="print-th" colSpan="2">Vikas Mitra</th>
+                <th className="print-th" colSpan="2">Vikas Ratna</th>
+                <th className="print-th print-th-total">Cash Balance</th>
+                <th className="print-th print-th-total">Bank Balance</th>
+                <th className="print-th print-th-total">Total FD</th>
+              </tr>
+              <tr>
+                <th className="print-th print-th-prev">No. of Members</th>
+                <th className="print-th print-th-prev">Membership Contribution</th>
+                <th className="print-th">No. of Members</th>
+                <th className="print-th">Membership Contribution</th>
+                <th className="print-th print-th-curr">No. of Members</th>
+                <th className="print-th print-th-curr">Membership Contribution</th>
+                <th className="print-th">31.03</th>
+                <th className="print-th">Till Date</th>
+                <th className="print-th">31.03</th>
+                <th className="print-th">Till Date</th>
+                <th className="print-th print-th-total"></th>
+                <th className="print-th print-th-total"></th>
+                <th className="print-th print-th-total"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="print-td print-td-label">Membership</td>
+                <td className="print-td print-td-prev">{pi.year2024_25_members}</td>
+                <td className="print-td print-td-prev">Rs {pi.year2024_25_contribution.toLocaleString()}</td>
+                <td className="print-td">{pi.target2025_26_members}</td>
+                <td className="print-td">Rs {pi.target2025_26_contribution.toLocaleString()}</td>
+                <td className="print-td print-td-curr">{pi.tillDate_members}</td>
+                <td className="print-td print-td-curr">Rs {pi.tillDate_contribution.toLocaleString()}</td>
+                <td className="print-td">{pi.vikasMitra_base}</td>
+                <td className="print-td">{pi.vikasMitra_tillDate}</td>
+                <td className="print-td">{pi.vikasRatna_base}</td>
+                <td className="print-td">{pi.vikasRatna_tillDate}</td>
+                <td className="print-td print-td-total">Rs {pi.cashBalance.toLocaleString()}</td>
+                <td className="print-td print-td-total">Rs {pi.bankBalance1.toLocaleString()}</td>
+                <td className="print-td print-td-total">Rs {pi.bankBalance2.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        {/* Sections 2-6 with grouped columns */}
+        {/* Sections 2-6: combined table per section (matches Excel) */}
         {printData.sections.map(section => (
           <div key={section.number} className="print-section">
             <div className="print-section-title">{section.number}. {section.title}</div>
-            {section.tables.map((table, ti) => (
-              <div key={ti} className="print-sheet">
-                <div className="print-sheet-subtitle">{table.title}</div>
-                <PrintSectionTable projects={table.projects} subCols={table.subCols} prevLabel={prevLabel} currMonth={currMonth} />
-              </div>
-            ))}
+            <PrintCombinedTable tables={section.tables} prevLabel={prevLabel} currMonth={currMonth} />
           </div>
         ))}
 
@@ -1002,6 +1029,8 @@ export default function DataEntryPage() {
               makeRow('Parinda (Bird Feeders)', ev.parinda_prev, v=>set('environmentGatividhi.parinda_prev',v), ev.parinda_curr, v=>set('environmentGatividhi.parinda_curr',v)),
               makeRow('Kundi', ev.kundi_prev, v=>set('environmentGatividhi.kundi_prev',v), ev.kundi_curr, v=>set('environmentGatividhi.kundi_curr',v)),
               makeRow('Chara (Qty)', ev.chara_prev, v=>set('environmentGatividhi.chara_prev',v), ev.chara_curr, v=>set('environmentGatividhi.chara_curr',v)),
+              makeRow('Dana (Qty)', ev.dana_prev, v=>set('environmentGatividhi.dana_prev',v), ev.dana_curr, v=>set('environmentGatividhi.dana_curr',v)),
+              makeRow('Others', ev.others_prev, v=>set('environmentGatividhi.others_prev',v), ev.others_curr, v=>set('environmentGatividhi.others_curr',v)),
             ]} />
           </div>
         )}
@@ -1030,6 +1059,13 @@ export default function DataEntryPage() {
               makeRow('No. of Activities', mh.baalSanskar.prev_activities, v=>set('mahilaSahbhagita.baalSanskar.prev_activities',v), mh.baalSanskar.curr_activities, v=>set('mahilaSahbhagita.baalSanskar.curr_activities',v)),
               makeRow('Presence', mh.baalSanskar.prev_presence, v=>set('mahilaSahbhagita.baalSanskar.prev_presence',v), mh.baalSanskar.curr_presence, v=>set('mahilaSahbhagita.baalSanskar.curr_presence',v)),
             ]} />
+            <Sheet title="Abhiruchi & Atmraksha Shivir" columns={pctCols} rows={[
+              makeRow('Abhiruchi Shivir', mh.abhiruchi.prev_shivir, v=>set('mahilaSahbhagita.abhiruchi.prev_shivir',v), mh.abhiruchi.curr_shivir, v=>set('mahilaSahbhagita.abhiruchi.curr_shivir',v)),
+              makeRow('Abhiruchi Activities', mh.abhiruchi.prev_activities, v=>set('mahilaSahbhagita.abhiruchi.prev_activities',v), mh.abhiruchi.curr_activities, v=>set('mahilaSahbhagita.abhiruchi.curr_activities',v)),
+              makeRow('Abhiruchi Beneficiary', mh.abhiruchi.prev_beneficiary, v=>set('mahilaSahbhagita.abhiruchi.prev_beneficiary',v), mh.abhiruchi.curr_beneficiary, v=>set('mahilaSahbhagita.abhiruchi.curr_beneficiary',v)),
+              makeRow('Atmraksha Activities', mh.abhiruchi.prev_atm_activities, v=>set('mahilaSahbhagita.abhiruchi.prev_atm_activities',v), mh.abhiruchi.curr_atm_activities, v=>set('mahilaSahbhagita.abhiruchi.curr_atm_activities',v)),
+              makeRow('Atmraksha Beneficiary', mh.abhiruchi.prev_atm_beneficiary, v=>set('mahilaSahbhagita.abhiruchi.prev_atm_beneficiary',v), mh.abhiruchi.curr_atm_beneficiary, v=>set('mahilaSahbhagita.abhiruchi.curr_atm_beneficiary',v)),
+            ]} />
             <Sheet title="Adoption Projects" subtitle="Family & Girl Child" columns={pctCols} rows={[
               makeRow('Families Adopted', mh.familyAdoption.prev_families, v=>set('mahilaSahbhagita.familyAdoption.prev_families',v), mh.familyAdoption.curr_families, v=>set('mahilaSahbhagita.familyAdoption.curr_families',v)),
               makeRow('Family Beneficiary', mh.familyAdoption.prev_family_beneficiary, v=>set('mahilaSahbhagita.familyAdoption.prev_family_beneficiary',v), mh.familyAdoption.curr_family_beneficiary, v=>set('mahilaSahbhagita.familyAdoption.curr_family_beneficiary',v)),
@@ -1051,6 +1087,12 @@ export default function DataEntryPage() {
             <Sheet title="Samuhik Saral Vivah" columns={pctCols} rows={[
               makeRow('No. of Vivah', sp.samuhikVivah.prev_vivah, v=>set('samparkGatividhi.samuhikVivah.prev_vivah',v), sp.samuhikVivah.curr_vivah, v=>set('samparkGatividhi.samuhikVivah.curr_vivah',v)),
               makeRow('Pairs', sp.samuhikVivah.prev_pairs, v=>set('samparkGatividhi.samuhikVivah.prev_pairs',v), sp.samuhikVivah.curr_pairs, v=>set('samparkGatividhi.samuhikVivah.curr_pairs',v)),
+            ]} />
+            <Sheet title="Education" columns={pctCols} rows={[
+              makeRow('Computer Training Centers', sp.education.prev_computer_centers, v=>set('samparkGatividhi.education.prev_computer_centers',v), sp.education.curr_computer_centers, v=>set('samparkGatividhi.education.curr_computer_centers',v)),
+              makeRow('Computer Beneficiary', sp.education.prev_computer_beneficiary, v=>set('samparkGatividhi.education.prev_computer_beneficiary',v), sp.education.curr_computer_beneficiary, v=>set('samparkGatividhi.education.curr_computer_beneficiary',v)),
+              makeRow('Library Centers', sp.education.prev_library_centers, v=>set('samparkGatividhi.education.prev_library_centers',v), sp.education.curr_library_centers, v=>set('samparkGatividhi.education.curr_library_centers',v)),
+              makeRow('Library Beneficiary', sp.education.prev_library_beneficiary, v=>set('samparkGatividhi.education.prev_library_beneficiary',v), sp.education.curr_library_beneficiary, v=>set('samparkGatividhi.education.curr_library_beneficiary',v)),
             ]} />
             <Sheet title="Nav Varsh & Inspiring Events" columns={pctCols} rows={[
               makeRow('Programmes', sp.navVarsh.prev_programmes, v=>set('samparkGatividhi.navVarsh.prev_programmes',v), sp.navVarsh.curr_programmes, v=>set('samparkGatividhi.navVarsh.curr_programmes',v)),
