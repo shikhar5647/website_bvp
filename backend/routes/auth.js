@@ -52,7 +52,8 @@ async function seedUsers() {
     await upsertUser(uname, hashed, 'branch_secretary', br.branch, br.district);
   }
 
-  await exportUsersToCSV();
+  // CSV export may fail on read-only filesystems (e.g. Vercel) — don't let it break seeding
+  try { await exportUsersToCSV(); } catch (e) { console.warn('CSV export skipped:', e.message); }
   console.log(`Seeded/updated ${BRANCHES.length + 2} users (admin + prant + ${BRANCHES.length} branches)`);
 }
  

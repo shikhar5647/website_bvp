@@ -18,9 +18,9 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bvp_reports');
     console.log('MongoDB connected successfully');
  
-    // Seed default users
+    // Seed default users (errors are non-fatal so the server still starts)
     const { seedUsers } = require('./routes/auth');
-    await seedUsers();
+    try { await seedUsers(); } catch (e) { console.error('Seed warning:', e.message); }
   } catch (error) {
     console.error('MongoDB connection error:', error);
     process.exit(1);
