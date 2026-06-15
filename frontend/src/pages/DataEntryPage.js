@@ -263,49 +263,67 @@ function Sheet({ title, subtitle, columns, rows, className }) {
 // ── Excel-style Combined Section Table ──────────────────────────────────────
 // Matches Excel: one table per section, each project has sub-header row + data row
 function PrintCombinedTable({ tables, prevLabel, currMonth }) {
-  // Find max sub-columns across all tables in this section
-  const maxCols = Math.max(...tables.map(t => (t.subCols || ['']).length));
+  // Fixed 5 columns per group (15 data columns + 1 label = 16 total), matching Excel layout
+  const GROUP_COLS = 5;
 
   return (
-    <table className="print-table">
+    <table className="print-table print-table-fixed">
+      <colgroup>
+        <col style={{ width: '15%' }} />
+        {Array.from({ length: GROUP_COLS * 3 }).map((_, i) => (
+          <col key={i} style={{ width: `${85 / (GROUP_COLS * 3)}%` }} />
+        ))}
+      </colgroup>
       <thead>
         <tr>
           <th className="print-th print-th-label">Projects</th>
-          <th className="print-th print-th-prev" colSpan={maxCols}>{prevLabel}</th>
-          <th className="print-th print-th-curr" colSpan={maxCols}>{currMonth}</th>
-          <th className="print-th print-th-total" colSpan={maxCols}>Cumulative Total</th>
+          <th className="print-th print-th-prev" colSpan={GROUP_COLS}>{prevLabel}</th>
+          <th className="print-th print-th-curr" colSpan={GROUP_COLS}>{currMonth}</th>
+          <th className="print-th print-th-total" colSpan={GROUP_COLS}>Cumulative Total</th>
         </tr>
       </thead>
       <tbody>
         {tables.map((table, ti) => {
           const sc = table.subCols || ['Value'];
-          const pad = maxCols - sc.length;
+          const pad = GROUP_COLS - sc.length; // remaining cols to fill via colSpan
           return (
             <React.Fragment key={ti}>
               {/* Sub-column header row */}
               <tr className="print-tr-subheader">
                 <td className="print-td print-td-label print-td-project">{table.title}</td>
-                {[0,1,2].map(g => (
-                  <React.Fragment key={g}>
-                    {sc.map((c, i) => (
-                      <td key={`${g}-${i}`} className={`print-td print-td-subhdr${g===2?' print-td-total':g===0?' print-td-prev':' print-td-curr'}`}>{c}</td>
-                    ))}
-                    {Array.from({length: pad}).map((_, i) => (
-                      <td key={`${g}-pad-${i}`} className="print-td"></td>
-                    ))}
-                  </React.Fragment>
-                ))}
+                {[0,1,2].map(g => {
+                  const groupClass = g === 0 ? ' print-td-prev' : g === 1 ? ' print-td-curr' : ' print-td-total';
+                  return (
+                    <React.Fragment key={g}>
+                      {sc.map((c, i) => {
+                        const isLast = i === sc.length - 1 && pad > 0;
+                        return (
+                          <td key={`${g}-${i}`}
+                            className={`print-td print-td-subhdr${groupClass}`}
+                            colSpan={isLast ? pad + 1 : undefined}
+                          >{c}</td>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })}
               </tr>
               {/* Data rows */}
               {table.projects.map((proj, pi) => (
                 <tr key={`d${ti}-${pi}`}>
                   <td className="print-td print-td-label">{table.projects.length > 1 ? proj.label : ''}</td>
-                  {proj.prev.map((v, i) => <td key={`p${i}`} className="print-td print-td-prev">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-                  {Array.from({length: pad}).map((_, i) => <td key={`pp${i}`} className="print-td"></td>)}
-                  {proj.curr.map((v, i) => <td key={`c${i}`} className="print-td print-td-curr">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-                  {Array.from({length: pad}).map((_, i) => <td key={`cp${i}`} className="print-td"></td>)}
-                  {proj.total.map((v, i) => <td key={`t${i}`} className="print-td print-td-total">{typeof v === 'number' ? v.toLocaleString() : v}</td>)}
-                  {Array.from({length: pad}).map((_, i) => <td key={`tp${i}`} className="print-td"></td>)}
+                  {proj.prev.map((v, i) => {
+                    const isLast = i === proj.prev.length - 1 && pad > 0;
+                    return <td key={`p${i}`} className="print-td print-td-prev" colSpan={isLast ? pad + 1 : undefined}>{typeof v === 'number' ? v.toLocaleString() : v}</td>;
+                  })}
+                  {proj.curr.map((v, i) => {
+                    const isLast = i === proj.curr.length - 1 && pad > 0;
+                    return <td key={`c${i}`} className="print-td print-td-curr" colSpan={isLast ? pad + 1 : undefined}>{typeof v === 'number' ? v.toLocaleString() : v}</td>;
+                  })}
+                  {proj.total.map((v, i) => {
+                    const isLast = i === proj.total.length - 1 && pad > 0;
+                    return <td key={`t${i}`} className="print-td print-td-total" colSpan={isLast ? pad + 1 : undefined}>{typeof v === 'number' ? v.toLocaleString() : v}</td>;
+                  })}
                 </tr>
               ))}
             </React.Fragment>

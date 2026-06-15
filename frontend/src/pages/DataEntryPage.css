@@ -824,6 +824,9 @@
   font-size: 12px;
   margin-bottom: 8px;
 }
+.print-table-fixed {
+  table-layout: fixed;
+}
 
 .print-th {
   padding: 6px 8px;
@@ -835,7 +838,8 @@
   background: #f8f9fa;
   border: 1px solid #dadce0;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .print-th-label {
@@ -921,6 +925,11 @@
 .no-print {}
 
 /* ── Print media query ───────────────────────────────────────────────────── */
+@page {
+  size: landscape;
+  margin: 10mm;
+}
+
 @media print {
   body { background: #fff !important; }
 
@@ -935,7 +944,8 @@
 
   .print-report {
     padding: 0;
-    max-width: 100%;
+    width: 100%;
+    max-width: none;
   }
 
   .print-header {
@@ -948,11 +958,41 @@
   }
 
   .print-table {
-    font-size: 10px;
+    font-size: 8px;
+    width: 100%;
+  }
+  .print-table-fixed {
+    table-layout: fixed;
   }
 
-  .print-th { padding: 5px 8px; font-size: 9px; }
-  .print-td { padding: 4px 8px; font-size: 10px; }
+  .print-th {
+    padding: 3px 4px;
+    font-size: 7px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .print-td {
+    padding: 3px 5px;
+    font-size: 9px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .print-td-label {
+    font-size: 8px;
+  }
+
+  .print-td-project {
+    font-size: 9px !important;
+  }
+
+  .print-tr-subheader td {
+    font-size: 7px;
+    padding: 2px 4px;
+  }
 
   .print-section-title,
   .print-sheet-title {
@@ -960,6 +1000,8 @@
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    font-size: 11px;
+    padding: 6px 10px;
   }
 
   .print-section {
@@ -971,6 +1013,9 @@
   .print-th-prev, .print-th-curr,
   .print-td-label, .print-td-total,
   .print-td-prev, .print-td-curr,
+  .print-td-subhdr.print-td-prev,
+  .print-td-subhdr.print-td-curr,
+  .print-td-subhdr.print-td-total,
   .print-sheet-subtitle {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
