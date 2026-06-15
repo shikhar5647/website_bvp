@@ -48,8 +48,8 @@ const PRANT_NAME = 'Rajasthan Pashchim';
 const DISTRICTS = [...new Set(BRANCHES.map(b => b.district))];
 
 const initialForm = {
-  branchName: '', prantName: '', districtName: '', panOfBranch: '',
-  reportMonth: 'June', reportYear: 2026,
+  branchName: '', prantName: PRANT_NAME, districtName: '', panOfBranch: '',
+  reportMonth: MONTHS[0], reportYear: YEARS[0],
   primaryInfo: {
     year2024_25_members:0, year2024_25_contribution:0,
     target2025_26_members:0, target2025_26_contribution:0,
@@ -129,16 +129,12 @@ const initialForm = {
     ekShakha:      { prev_programmes:0, prev_beneficiaries:0, prev_amount:0, curr_programmes:0, curr_beneficiaries:0, curr_amount:0 },
   },
   permanentSewa: [
-    { service:'Physiotherapy', prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
-    { service:'Dental',        prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
-    { service:'X-Ray',         prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
-    { service:'Dialysis',      prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
-    { service:'Lab',           prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
+    { service:'', prev_projects:0, prev_beneficiary:0, prev_cost:0, curr_projects:0, curr_beneficiary:0, curr_cost:0 },
   ],
   meetings: {
-    executive:   [{ date:'', participants:0 }],
-    generalBody: [{ date:'', participants:0 }],
-    workingGroup:[{ date:'', participants:0 }],
+    executive:   [{ ...defaultMeeting }],
+    generalBody: [{ ...defaultMeeting }],
+    workingGroup:[{ ...defaultMeeting }],
   },
 };
 
@@ -388,9 +384,9 @@ function exportCSV(form, printData, currMonth, prevLabel) {
 
   // Permanent Sewa
   lines.push('8. Permanent Sewa Projects');
-  lines.push(`Service,${prevLabel} Projects,${prevLabel} Beneficiary,${prevLabel} Cost,${currMonth} Projects,${currMonth} Beneficiary,${currMonth} Cost,Total Beneficiary,Total Cost`);
+  lines.push(`Service,${prevLabel} Projects,${prevLabel} Beneficiary,${prevLabel} Cost,${currMonth} Projects,${currMonth} Beneficiary,${currMonth} Cost,Total Projects,Total Beneficiary,Total Cost`);
   form.permanentSewa.forEach(r => {
-    lines.push([esc(r.service||'-'), r.prev_projects, r.prev_beneficiary, r.prev_cost, r.curr_projects, r.curr_beneficiary, r.curr_cost, r.prev_beneficiary+r.curr_beneficiary, r.prev_cost+r.curr_cost].join(','));
+    lines.push([esc(r.service||'-'), r.prev_projects, r.prev_beneficiary, r.prev_cost, r.curr_projects, r.curr_beneficiary, r.curr_cost, r.prev_projects+r.curr_projects, r.prev_beneficiary+r.curr_beneficiary, r.prev_cost+r.curr_cost].join(','));
   });
   lines.push('');
 
@@ -708,7 +704,11 @@ export default function DataEntryPage() {
         {/* 8. Permanent Sewa Projects */}
         <div className="print-section">
           <div className="print-section-title">8. Permanent Sewa Gatividhi / Projects</div>
-          <table className="print-table">
+          <table className="print-table print-table-fixed">
+            <colgroup>
+              <col style={{width:'15%'}}/>
+              {Array.from({length:9},(_,i)=><col key={i} style={{width:`${85/9}%`}}/>)}
+            </colgroup>
             <thead>
               <tr>
                 <th className="print-th print-th-label" rowSpan="2">Projects</th>
