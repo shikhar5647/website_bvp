@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { reportAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import PrintReport, { exportCSV } from '../components/PrintReport';
 import './ReportsPage.css';
  
 const MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
@@ -59,6 +60,7 @@ export default function ReportsPage() {
   const [selectedProject, setSelectedProject] = useState('sanskarGatividhi.gvca');
   const [loading, setLoading] = useState(false);
   const [viewReport, setViewReport] = useState(null);
+  const [printReport, setPrintReport] = useState(null);
  
   const fetchBranchHistory = useCallback(async () => {
     setLoading(true);
@@ -111,7 +113,14 @@ export default function ReportsPage() {
     else if (tab === 'all') fetchAllReports();
   }, [tab, fetchBranchHistory, fetchConsolidated, fetchProjectWise, fetchAllReports]);
  
-  const handlePrint = () => { window.print(); };
+  const handlePrint = () => {
+    if (viewReport) {
+      setPrintReport(viewReport);
+      setViewReport(null);
+    } else {
+      window.print();
+    }
+  };
  
   const handleDownloadCSV = (data, filename) => {
     if (!data || data.length === 0) { toast.error('No data to download'); return; }
@@ -455,74 +464,25 @@ export default function ReportsPage() {
               <div className="report-modal-header">
                 <h2>{viewReport.branchName} — {viewReport.reportMonth} {viewReport.reportYear}</h2>
                 <div className="report-modal-actions">
-                  <button className="print-btn" onClick={handlePrint}>Print</button>
+                  <button className="print-btn" onClick={handlePrint}>Print Report</button>
+                  <button className="download-btn" onClick={() => exportCSV(viewReport)}>Download CSV</button>
                   <button className="close-btn" onClick={() => setViewReport(null)}>Close</button>
                 </div>
               </div>
               <div className="report-modal-body printable">
-                <div className="report-detail-grid">
-                  <div className="detail-section">
-                    <h3>Branch Information</h3>
-                    <div className="detail-row"><span>Branch:</span><strong>{viewReport.branchName}</strong></div>
-                    <div className="detail-row"><span>Prant:</span><strong>{viewReport.prantName}</strong></div>
-                    <div className="detail-row"><span>District:</span><strong>{viewReport.districtName}</strong></div>
-                    <div className="detail-row"><span>PAN:</span><strong>{viewReport.panOfBranch || '—'}</strong></div>
-                  </div>
- 
-                  {viewReport.primaryInfo && (
-                    <div className="detail-section">
-                      <h3>Membership & Finances</h3>
-                      <div className="detail-row"><span>Members (Till Date):</span><strong>{viewReport.primaryInfo.tillDate_members}</strong></div>
-                      <div className="detail-row"><span>Contribution:</span><strong>&#8377;{(viewReport.primaryInfo.tillDate_contribution || 0).toLocaleString()}</strong></div>
-                      <div className="detail-row"><span>Target Members:</span><strong>{viewReport.primaryInfo.target2025_26_members}</strong></div>
-                      <div className="detail-row"><span>Cash Balance:</span><strong>&#8377;{(viewReport.primaryInfo.cashBalance || 0).toLocaleString()}</strong></div>
-                      <div className="detail-row"><span>Bank Balance:</span><strong>&#8377;{((viewReport.primaryInfo.bankBalance1 || 0) + (viewReport.primaryInfo.bankBalance2 || 0)).toLocaleString()}</strong></div>
-                    </div>
-                  )}
- 
-                  {viewReport.sanskarGatividhi && (
-                    <div className="detail-section">
-                      <h3>Sanskar Gatividhi</h3>
-                      {viewReport.sanskarGatividhi.nsgc && <div className="detail-row"><span>NSGC Schools (Curr):</span><strong>{viewReport.sanskarGatividhi.nsgc.curr_schools || 0}</strong></div>}
-                      {viewReport.sanskarGatividhi.bharatKoJano && <div className="detail-row"><span>BKJ Schools (Curr):</span><strong>{viewReport.sanskarGatividhi.bharatKoJano.curr_schools || 0}</strong></div>}
-                      {viewReport.sanskarGatividhi.gvca && <div className="detail-row"><span>GVCA Schools (Curr):</span><strong>{viewReport.sanskarGatividhi.gvca.curr_schools || 0}</strong></div>}
-                    </div>
-                  )}
- 
-                  {viewReport.sewaGatividhi && (
-                    <div className="detail-section">
-                      <h3>Sewa Gatividhi</h3>
-                      {viewReport.sewaGatividhi.medicalCamp && (
-                        <>
-                          <div className="detail-row"><span>Health Beneficiary (Curr):</span><strong>{viewReport.sewaGatividhi.medicalCamp.curr_health_beneficiary || 0}</strong></div>
-                          <div className="detail-row"><span>Eye Beneficiary (Curr):</span><strong>{viewReport.sewaGatividhi.medicalCamp.curr_eye_beneficiary || 0}</strong></div>
-                        </>
-                      )}
-                      {viewReport.sewaGatividhi.bloodDonation && <div className="detail-row"><span>Blood Units (Curr):</span><strong>{viewReport.sewaGatividhi.bloodDonation.curr_blood_units || viewReport.sewaGatividhi.bloodDonation.curr_units || 0}</strong></div>}
-                    </div>
-                  )}
- 
-                  {viewReport.environmentGatividhi && (
-                    <div className="detail-section">
-                      <h3>Environment</h3>
-                      <div className="detail-row"><span>Trees Planted (Curr):</span><strong>{viewReport.environmentGatividhi.treePlantation_curr || 0}</strong></div>
-                      <div className="detail-row"><span>Tulsi Podha (Curr):</span><strong>{viewReport.environmentGatividhi.tulsiPodha_curr || 0}</strong></div>
-                    </div>
-                  )}
- 
-                  {viewReport.mahilaSahbhagita && (
-                    <div className="detail-section">
-                      <h3>Mahila Sahbhagita</h3>
-                      {viewReport.mahilaSahbhagita.anemiaMukt && <div className="detail-row"><span>Anemia Tests (Curr):</span><strong>{viewReport.mahilaSahbhagita.anemiaMukt.curr_total_test || 0}</strong></div>}
-                      {viewReport.mahilaSahbhagita.betiPadhao && <div className="detail-row"><span>Beti Padhao Programmes:</span><strong>{viewReport.mahilaSahbhagita.betiPadhao.curr_programmes || 0}</strong></div>}
-                    </div>
-                  )}
-                </div>
+                <PrintReport form={viewReport} onBack={() => setViewReport(null)} />
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Full-page print view (replaces entire page for clean printing) */}
+      {printReport && (
+        <div className="print-fullpage-overlay">
+          <PrintReport form={printReport} onBack={() => setPrintReport(null)} />
+        </div>
+      )}
     </div>
   );
 }
