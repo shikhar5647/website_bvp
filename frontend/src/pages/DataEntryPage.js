@@ -296,12 +296,23 @@ export default function DataEntryPage() {
     }
     setSubmitting(true);
     try {
-      await reportAPI.create(form);
+      const cleanMeetings = (arr) => arr.filter(m => m.date);
+      const payload = {
+        ...form,
+        permanentSewa: form.permanentSewa.filter(p => p.service),
+        meetings: {
+          executive: cleanMeetings(form.meetings.executive),
+          generalBody: cleanMeetings(form.meetings.generalBody),
+          workingGroup: cleanMeetings(form.meetings.workingGroup),
+        },
+      };
+      await reportAPI.create(payload);
       toast.success('Report submitted successfully!');
       setForm(initialForm);
       setActiveTab('branch');
     } catch (err) {
-      toast.error('Failed to submit. Check backend connection.');
+      const msg = err.response?.data?.message || 'Failed to submit. Check backend connection.';
+      toast.error(msg);
     }
     setSubmitting(false);
   };
