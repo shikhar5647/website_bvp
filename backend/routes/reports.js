@@ -25,7 +25,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
  
     const reports = await Report.find(filter)
-      .select('branchName prantName districtName reportMonth reportYear submittedAt primaryInfo submittedBy')
       .sort({ createdAt: -1 });
     res.json({ success: true, count: reports.length, data: reports });
   } catch (error) {
@@ -120,38 +119,100 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
         $group: {
           _id: { month: '$reportMonth', year: '$reportYear' },
           totalBranches: { $sum: 1 },
+          // Primary
           totalMembers: { $sum: '$primaryInfo.tillDate_members' },
           totalContribution: { $sum: '$primaryInfo.tillDate_contribution' },
-          totalMedicalBeneficiary: {
-            $sum: {
-              $add: [
-                '$sewaGatividhi.medicalCamp.curr_health_beneficiary',
-                '$sewaGatividhi.medicalCamp.curr_eye_beneficiary'
-              ]
-            }
-          },
-          totalTrees: { $sum: '$environmentGatividhi.treePlantation_curr' },
+          totalTargetMembers: { $sum: '$primaryInfo.target2025_26_members' },
+          totalTargetContribution: { $sum: '$primaryInfo.target2025_26_contribution' },
+          totalCash: { $sum: '$primaryInfo.cashBalance' },
+          totalBank: { $sum: { $add: ['$primaryInfo.bankBalance1', '$primaryInfo.bankBalance2'] } },
+          totalVikasMitra: { $sum: '$primaryInfo.vikasMitra_tillDate' },
+          totalVikasRatna: { $sum: '$primaryInfo.vikasRatna_tillDate' },
+          // Sewa
+          totalMedicalBeneficiary: { $sum: { $add: ['$sewaGatividhi.medicalCamp.curr_health_beneficiary', '$sewaGatividhi.medicalCamp.curr_eye_beneficiary'] } },
+          totalOperations: { $sum: '$sewaGatividhi.medicalCamp.curr_operations' },
           totalBloodUnits: { $sum: '$sewaGatividhi.bloodDonation.curr_blood_units' },
+          totalHelpingNeedy: { $sum: '$sewaGatividhi.helpingNeedy.curr_beneficiary' },
+          totalGramVikas: { $sum: '$sewaGatividhi.gramVikas.curr_beneficiary' },
+          totalDivyang: { $sum: '$sewaGatividhi.divyangSahayta.curr_beneficiary' },
+          totalYogBeneficiary: { $sum: '$sewaGatividhi.healthAwareness.curr_yog_beneficiary' },
+          totalNashaBeneficiary: { $sum: '$sewaGatividhi.healthAwareness.curr_nasha_beneficiary' },
+          // Environment
+          totalTrees: { $sum: '$environmentGatividhi.treePlantation_curr' },
+          totalTulsi: { $sum: '$environmentGatividhi.tulsiPodha_curr' },
+          totalClothBags: { $sum: '$environmentGatividhi.clothBags_curr' },
+          // Sanskar
+          totalNsgcStudents: { $sum: { $add: ['$sanskarGatividhi.nsgc.curr_boys', '$sanskarGatividhi.nsgc.curr_girls'] } },
+          totalBkjStudents: { $sum: { $add: ['$sanskarGatividhi.bharatKoJano.curr_students_jr', '$sanskarGatividhi.bharatKoJano.curr_students_sr'] } },
+          totalGvcaStudents: { $sum: { $add: ['$sanskarGatividhi.gvca.curr_students_honoured', '$sanskarGatividhi.gvca.curr_teachers_honoured'] } },
+          totalInterCollege: { $sum: { $add: ['$sanskarGatividhi.interCollege.curr_boys', '$sanskarGatividhi.interCollege.curr_girls'] } },
+          // Mahila
+          totalAnemiaTested: { $sum: '$mahilaSahbhagita.anemiaMukt.curr_total_test' },
+          totalBetiPadhao: { $sum: '$mahilaSahbhagita.betiPadhao.curr_programmes' },
+          totalFamilyAdoption: { $sum: '$mahilaSahbhagita.familyAdoption.curr_families' },
+          totalSewingCenters: { $sum: '$mahilaSahbhagita.atmnirbhar.curr_sewing_centers' },
+          // Sampark
+          totalSamparkProgrammes: { $sum: { $add: [
+            '$samparkGatividhi.sankritSaptah.curr_programmes',
+            '$samparkGatividhi.bvpSthapnaDiwas.curr_programmes',
+            '$samparkGatividhi.vichargosthi.curr_programmes',
+            '$samparkGatividhi.navVarsh.curr_programmes',
+          ] } },
+          totalSamparkParticipants: { $sum: { $add: [
+            '$samparkGatividhi.sankritSaptah.curr_participants',
+            '$samparkGatividhi.bvpSthapnaDiwas.curr_participants',
+            '$samparkGatividhi.vichargosthi.curr_participants',
+            '$samparkGatividhi.navVarsh.curr_participants',
+          ] } },
+          // Meetings
+          totalExecutiveMeetings: { $sum: { $size: { $ifNull: ['$meetings.executive', []] } } },
+          totalGeneralMeetings: { $sum: { $size: { $ifNull: ['$meetings.generalBody', []] } } },
+          totalWorkingMeetings: { $sum: { $size: { $ifNull: ['$meetings.workingGroup', []] } } },
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
- 
+
     const branchWise = await Report.aggregate([
       { $match: match },
       {
         $group: {
           _id: '$branchName',
+          districtName: { $first: '$districtName' },
           totalReports: { $sum: 1 },
           avgMembers: { $avg: '$primaryInfo.tillDate_members' },
           totalContribution: { $sum: '$primaryInfo.tillDate_contribution' },
-          totalMedical: { $sum: '$sewaGatividhi.medicalCamp.curr_health_beneficiary' },
+          targetMembers: { $max: '$primaryInfo.target2025_26_members' },
+          totalCash: { $sum: '$primaryInfo.cashBalance' },
+          totalBank: { $sum: { $add: ['$primaryInfo.bankBalance1', '$primaryInfo.bankBalance2'] } },
+          totalMedical: { $sum: { $add: ['$sewaGatividhi.medicalCamp.curr_health_beneficiary', '$sewaGatividhi.medicalCamp.curr_eye_beneficiary'] } },
           totalBlood: { $sum: '$sewaGatividhi.bloodDonation.curr_blood_units' },
+          totalTrees: { $sum: '$environmentGatividhi.treePlantation_curr' },
+          totalHelpingNeedy: { $sum: '$sewaGatividhi.helpingNeedy.curr_beneficiary' },
+          totalDivyang: { $sum: '$sewaGatividhi.divyangSahayta.curr_beneficiary' },
+          totalGramVikas: { $sum: '$sewaGatividhi.gramVikas.curr_beneficiary' },
+          totalNsgc: { $sum: { $add: ['$sanskarGatividhi.nsgc.curr_boys', '$sanskarGatividhi.nsgc.curr_girls'] } },
+          totalBkj: { $sum: { $add: ['$sanskarGatividhi.bharatKoJano.curr_students_jr', '$sanskarGatividhi.bharatKoJano.curr_students_sr'] } },
+          totalGvca: { $sum: { $add: ['$sanskarGatividhi.gvca.curr_students_honoured', '$sanskarGatividhi.gvca.curr_teachers_honoured'] } },
+          totalAnemiaTested: { $sum: '$mahilaSahbhagita.anemiaMukt.curr_total_test' },
+          totalBetiPadhao: { $sum: '$mahilaSahbhagita.betiPadhao.curr_programmes' },
+          totalSewingCenters: { $sum: '$mahilaSahbhagita.atmnirbhar.curr_sewing_centers' },
+          totalFamilyAdoption: { $sum: '$mahilaSahbhagita.familyAdoption.curr_families' },
+          totalSamparkProgrammes: { $sum: { $add: [
+            '$samparkGatividhi.sankritSaptah.curr_programmes',
+            '$samparkGatividhi.bvpSthapnaDiwas.curr_programmes',
+            '$samparkGatividhi.vichargosthi.curr_programmes',
+          ] } },
+          totalMeetings: { $sum: { $add: [
+            { $size: { $ifNull: ['$meetings.executive', []] } },
+            { $size: { $ifNull: ['$meetings.generalBody', []] } },
+            { $size: { $ifNull: ['$meetings.workingGroup', []] } },
+          ] } },
         }
       },
       { $sort: { totalContribution: -1 } }
     ]);
- 
+
     res.json({ success: true, data: { monthly: summary, branchWise } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

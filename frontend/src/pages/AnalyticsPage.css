@@ -328,6 +328,40 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Progress Bars (Target vs Achievement) */
+.progress-row { margin-bottom: 16px; }
+.progress-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px;
+}
+.progress-nums { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+.progress-track {
+  height: 10px; background: rgba(0,0,0,0.06); border-radius: 6px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 6px; transition: width 0.6s ease;
+}
+
+/* Heatmap */
+.heatmap-scroll { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+.heatmap-table {
+  width: 100%; border-collapse: collapse; font-size: 11px;
+}
+.heatmap-table th {
+  padding: 6px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  color: var(--saffron); background: rgba(255,107,0,0.04); position: sticky; top: 0;
+  border-bottom: 1px solid rgba(212,175,55,0.15); text-align: center; white-space: nowrap;
+}
+.heatmap-branch {
+  font-weight: 600; color: var(--navy); white-space: nowrap; padding: 4px 8px;
+  position: sticky; left: 0; background: white; border-right: 1px solid #f0f0f0;
+}
+.heatmap-cell {
+  text-align: center; padding: 4px; font-weight: 700; font-size: 11px;
+}
+.heatmap-yes { background: rgba(46,204,113,0.15); color: #27ae60; }
+.heatmap-no { background: rgba(231,76,60,0.08); color: #e74c3c; }
+
 /* Responsive */
 @media (max-width: 1024px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
