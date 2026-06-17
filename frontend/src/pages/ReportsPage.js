@@ -47,6 +47,62 @@ function getFinancialYear() {
   const m = now.getMonth();
   return m >= 3 ? now.getFullYear() : now.getFullYear() - 1;
 }
+
+function deepSum(target, source) {
+  for (const key of Object.keys(source)) {
+    const sv = source[key];
+    if (typeof sv === 'number') {
+      target[key] = (target[key] || 0) + sv;
+    } else if (sv && typeof sv === 'object' && !Array.isArray(sv)) {
+      if (!target[key]) target[key] = {};
+      deepSum(target[key], sv);
+    }
+  }
+}
+
+function buildPrantTotal(reports, month, year) {
+  const prant = {
+    branchName: 'PRANT TOTAL',
+    prantName: 'Rajasthan Pashchim',
+    districtName: 'All Districts',
+    reportMonth: month,
+    reportYear: year,
+    primaryInfo: {},
+    sanskarGatividhi: {},
+    sewaGatividhi: {},
+    environmentGatividhi: {},
+    mahilaSahbhagita: {},
+    samparkGatividhi: {},
+    permanentSewa: [],
+    meetings: { executive: [], generalBody: [], workingGroup: [] },
+  };
+
+  for (const r of reports) {
+    if (r.primaryInfo) deepSum(prant.primaryInfo, r.primaryInfo);
+    if (r.sanskarGatividhi) deepSum(prant.sanskarGatividhi, r.sanskarGatividhi);
+    if (r.sewaGatividhi) deepSum(prant.sewaGatividhi, r.sewaGatividhi);
+    if (r.environmentGatividhi) deepSum(prant.environmentGatividhi, r.environmentGatividhi);
+    if (r.mahilaSahbhagita) deepSum(prant.mahilaSahbhagita, r.mahilaSahbhagita);
+    if (r.samparkGatividhi) deepSum(prant.samparkGatividhi, r.samparkGatividhi);
+
+    (r.permanentSewa || []).forEach(ps => {
+      if (!ps.service) return;
+      const existing = prant.permanentSewa.find(p => p.service === ps.service);
+      if (existing) {
+        existing.prev_projects += (ps.prev_projects || 0);
+        existing.prev_beneficiary += (ps.prev_beneficiary || 0);
+        existing.prev_cost += (ps.prev_cost || 0);
+        existing.curr_projects += (ps.curr_projects || 0);
+        existing.curr_beneficiary += (ps.curr_beneficiary || 0);
+        existing.curr_cost += (ps.curr_cost || 0);
+      } else {
+        prant.permanentSewa.push({ ...ps });
+      }
+    });
+  }
+
+  return prant;
+}
  
 export default function ReportsPage() {
   const { user, isPrant, isBranch } = useAuth();
@@ -320,18 +376,26 @@ export default function ReportsPage() {
                     </tr>
                   </tbody>
                 </table>
-                <button className="download-btn" style={{marginTop: 16}} onClick={() => handleDownloadCSV(
-                  consolidated.reports.map((r, i) => ({
-                    SNo: i + 1, Branch: r.branchName, District: r.districtName,
-                    Members: r.primaryInfo?.tillDate_members || 0,
-                    Contribution: r.primaryInfo?.tillDate_contribution || 0,
-                    Medical: (r.sewaGatividhi?.medicalCamp?.curr_health_beneficiary || 0) + (r.sewaGatividhi?.medicalCamp?.curr_eye_beneficiary || 0),
-                    Trees: r.environmentGatividhi?.treePlantation_curr || 0,
-                  })),
-                  `consolidated_${selectedMonth}_${selectedYear}.csv`
-                )}>
-                  Download Consolidated CSV
-                </button>
+                <div style={{marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap'}}>
+                  <button className="download-btn" onClick={() => handleDownloadCSV(
+                    consolidated.reports.map((r, i) => ({
+                      SNo: i + 1, Branch: r.branchName, District: r.districtName,
+                      Members: r.primaryInfo?.tillDate_members || 0,
+                      Contribution: r.primaryInfo?.tillDate_contribution || 0,
+                      Medical: (r.sewaGatividhi?.medicalCamp?.curr_health_beneficiary || 0) + (r.sewaGatividhi?.medicalCamp?.curr_eye_beneficiary || 0),
+                      Trees: r.environmentGatividhi?.treePlantation_curr || 0,
+                    })),
+                    `consolidated_summary_${selectedMonth}_${selectedYear}.csv`
+                  )}>
+                    Download Summary CSV
+                  </button>
+                  <button className="download-btn" onClick={() => exportCSV(buildPrantTotal(consolidated.reports, selectedMonth, selectedYear))}>
+                    Download Full Prant CSV
+                  </button>
+                  <button className="print-btn" onClick={() => setPrintReport(buildPrantTotal(consolidated.reports, selectedMonth, selectedYear))}>
+                    Print Full Prant Report
+                  </button>
+                </div>
               </>
             )}
           </div>
