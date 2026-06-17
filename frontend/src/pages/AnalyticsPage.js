@@ -126,9 +126,8 @@ export default function AnalyticsPage() {
     fetchData();
   }, [selectedYear]);
 
-  const data = analytics || { monthly: [], branchWise: [] };
-  const monthly = data.monthly || [];
-  const branchWise = data.branchWise || [];
+  const monthly = useMemo(() => (analytics?.monthly || []), [analytics]);
+  const branchWise = useMemo(() => (analytics?.branchWise || []), [analytics]);
 
   // Sort monthly by MONTHS_ORDER
   const monthlySorted = useMemo(() =>
