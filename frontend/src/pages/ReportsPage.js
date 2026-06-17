@@ -99,6 +99,15 @@ function buildPrantTotal(reports, month, year) {
         prant.permanentSewa.push({ ...ps });
       }
     });
+
+    const mtg = r.meetings || {};
+    ['executive', 'generalBody', 'workingGroup'].forEach(type => {
+      (mtg[type] || []).forEach(m => {
+        if (m.date) {
+          prant.meetings[type].push({ date: `${r.branchName} — ${m.date}`, participants: m.participants || 0 });
+        }
+      });
+    });
   }
 
   return prant;
