@@ -365,7 +365,7 @@ export default function DataEntryPage() {
         setLoadingPrev(false);
         toast.success(`Loaded previous month (${prevMonth}) data`);
       })
-      .catch(() => { if (!cancelled) setLoadingPrev(false); });
+      .catch(err => { if (!cancelled) { setLoadingPrev(false); console.warn('Failed to load prev month:', err.message); } });
     return () => { cancelled = true; };
   }, [form.branchName, form.reportMonth, form.reportYear]);
 
