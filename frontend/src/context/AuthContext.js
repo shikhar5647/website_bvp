@@ -8,8 +8,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
  
   useEffect(() => {
-    const token = localStorage.getItem('bvp_token');
-    const savedUser = localStorage.getItem('bvp_user');
+    const token = sessionStorage.getItem('bvp_token');
+    const savedUser = sessionStorage.getItem('bvp_user');
     if (token && savedUser) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(JSON.parse(savedUser));
@@ -20,8 +20,8 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     const res = await api.post('/auth/login', { username, password });
     const { token, user: userData } = res.data.data;
-    localStorage.setItem('bvp_token', token);
-    localStorage.setItem('bvp_user', JSON.stringify(userData));
+    sessionStorage.setItem('bvp_token', token);
+    sessionStorage.setItem('bvp_user', JSON.stringify(userData));
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
     return userData;
@@ -38,8 +38,8 @@ export function AuthProvider({ children }) {
   };
  
   const logout = () => {
-    localStorage.removeItem('bvp_token');
-    localStorage.removeItem('bvp_user');
+    sessionStorage.removeItem('bvp_token');
+    sessionStorage.removeItem('bvp_user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };

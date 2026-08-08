@@ -7,8 +7,8 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
  
-// Attach token from localStorage on init
-const token = localStorage.getItem('bvp_token');
+// Attach token from sessionStorage on init
+const token = sessionStorage.getItem('bvp_token');
 if (token) {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
@@ -18,8 +18,8 @@ api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('bvp_token');
-      localStorage.removeItem('bvp_user');
+      sessionStorage.removeItem('bvp_token');
+      sessionStorage.removeItem('bvp_user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
