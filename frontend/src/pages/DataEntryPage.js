@@ -261,11 +261,113 @@ function Sheet({ title, subtitle, columns, rows, className }) {
 
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
+function getPrevMonthYear(month, year) {
+  const idx = MONTHS.indexOf(month);
+  if (idx <= 0) return { month: 'March', year: year - 1 };
+  return { month: MONTHS[idx - 1], year };
+}
+
+function populatePrevFromReport(report) {
+  if (!report) return {};
+  const updates = {};
+
+  const mapNestedSection = (sectionKey, programs) => {
+    const section = report[sectionKey];
+    if (!section) return;
+    updates[sectionKey] = {};
+    for (const prog of programs) {
+      const src = section[prog];
+      if (!src) continue;
+      updates[sectionKey][prog] = {};
+      for (const key of Object.keys(src)) {
+        if (key.startsWith('curr_')) {
+          const prevKey = 'prev_' + key.slice(5);
+          const prevVal = typeof src[prevKey] === 'number' ? src[prevKey] : 0;
+          const currVal = typeof src[key] === 'number' ? src[key] : 0;
+          updates[sectionKey][prog][prevKey] = prevVal + currVal;
+        }
+      }
+    }
+  };
+
+  mapNestedSection('sanskarGatividhi', ['nsgc','bharatKoJano','gvca','interCollege','yuvaSanskar']);
+  mapNestedSection('sewaGatividhi', ['divyangSahayta','vanvasiSahayta','gramVikas','medicalCamp','healthAwareness','bloodDonation','helpingNeedy']);
+  mapNestedSection('mahilaSahbhagita', ['betiPadhao','anemiaMukt','atmnirbhar','baalSanskar','abhiruchi','familyAdoption']);
+  mapNestedSection('samparkGatividhi', ['sankritSaptah','samuhikVivah','bvpSthapnaDiwas','vichargosthi','education','navVarsh','ekShakha']);
+
+  const env = report.environmentGatividhi;
+  if (env) {
+    updates.environmentGatividhi = {};
+    const envFields = ['treePlantation','tulsiPodha','clothBags','seminars','seminar_presence','parinda','kundi','chara','dana','others'];
+    for (const f of envFields) {
+      const prevVal = typeof env[f + '_prev'] === 'number' ? env[f + '_prev'] : 0;
+      const currVal = typeof env[f + '_curr'] === 'number' ? env[f + '_curr'] : 0;
+      updates.environmentGatividhi[f + '_prev'] = prevVal + currVal;
+    }
+  }
+
+  if (Array.isArray(report.permanentSewa) && report.permanentSewa.length > 0) {
+    updates.permanentSewa = report.permanentSewa
+      .filter(p => p.service)
+      .map(p => ({
+        service: p.service,
+        prev_projects: (p.prev_projects || 0) + (p.curr_projects || 0),
+        prev_beneficiary: (p.prev_beneficiary || 0) + (p.curr_beneficiary || 0),
+        prev_cost: (p.prev_cost || 0) + (p.curr_cost || 0),
+        curr_projects: 0, curr_beneficiary: 0, curr_cost: 0,
+      }));
+  }
+
+  return updates;
+}
+
 export default function DataEntryPage() {
   const [form, setForm] = useState(initialForm);
   const [activeTab, setActiveTab] = useState('branch');
   const [submitting, setSubmitting] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
+  const [loadingPrev, setLoadingPrev] = useState(false);
+
+  useEffect(() => {
+    if (!form.branchName || !form.reportMonth || !form.reportYear) return;
+    const { month: prevMonth, year: prevYear } = getPrevMonthYear(form.reportMonth, form.reportYear);
+    let cancelled = false;
+    setLoadingPrev(true);
+    reportAPI.getAll({ branch: form.branchName, month: prevMonth, year: prevYear })
+      .then(res => {
+        if (cancelled) return;
+        const reports = res.data.data || [];
+        const prev = reports.find(r => r.branchName === form.branchName);
+        if (!prev) { setLoadingPrev(false); return; }
+        const prevData = populatePrevFromReport(prev);
+        setForm(f => {
+          const copy = JSON.parse(JSON.stringify(f));
+          for (const section of Object.keys(prevData)) {
+            if (section === 'permanentSewa') {
+              copy.permanentSewa = prevData.permanentSewa;
+              continue;
+            }
+            if (typeof prevData[section] === 'object' && !Array.isArray(prevData[section])) {
+              for (const key of Object.keys(prevData[section])) {
+                if (typeof prevData[section][key] === 'object') {
+                  if (!copy[section]) copy[section] = {};
+                  if (!copy[section][key]) copy[section][key] = {};
+                  Object.assign(copy[section][key], prevData[section][key]);
+                } else {
+                  if (!copy[section]) copy[section] = {};
+                  copy[section][key] = prevData[section][key];
+                }
+              }
+            }
+          }
+          return copy;
+        });
+        setLoadingPrev(false);
+        toast.success(`Loaded previous month (${prevMonth}) data`);
+      })
+      .catch(() => { if (!cancelled) setLoadingPrev(false); });
+    return () => { cancelled = true; };
+  }, [form.branchName, form.reportMonth, form.reportYear]);
 
   const set = (path, value) => {
     setForm(prev => {
@@ -455,6 +557,9 @@ export default function DataEntryPage() {
                   </select>
                 </div>
               </div>
+              {loadingPrev && (
+                <div className="ss-prev-loading">Loading previous month data...</div>
+              )}
             </div>
           </div>
         )}

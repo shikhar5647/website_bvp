@@ -484,6 +484,18 @@
   border-bottom: 2px solid #FF6B00;
 }
 
+.ss-prev-loading {
+  padding: 12px 20px;
+  background: rgba(255,107,0,0.08);
+  color: var(--saffron, #ff6b00);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  border-top: 1px solid rgba(255,107,0,0.15);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
 .ss-field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
