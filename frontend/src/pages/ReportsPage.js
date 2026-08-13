@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { reportAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -115,6 +116,7 @@ function buildPrantTotal(reports, month, year) {
  
 export default function ReportsPage() {
   const { user, isPrant, isBranch } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState(isBranch ? 'branch' : 'consolidated');
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[0]);
   const [selectedYear, setSelectedYear] = useState(getFinancialYear());
@@ -310,6 +312,7 @@ export default function ReportsPage() {
                       <td>{new Date(r.submittedAt).toLocaleDateString('en-IN')}</td>
                       <td>
                         <button className="view-btn" onClick={() => viewFullReport(r._id)}>View</button>
+                        <button className="edit-btn" onClick={() => navigate(`/?edit=${r._id}`)}>Edit</button>
                       </td>
                     </tr>
                   ))}
@@ -318,7 +321,7 @@ export default function ReportsPage() {
             )}
           </div>
         )}
- 
+
         {/* Consolidated Prant Report */}
         {tab === 'consolidated' && !loading && consolidated && (
           <div className="report-section printable">
@@ -369,7 +372,10 @@ export default function ReportsPage() {
                         <td>&#8377;{(r.primaryInfo?.tillDate_contribution || 0).toLocaleString()}</td>
                         <td>{((r.sewaGatividhi?.medicalCamp?.curr_health_beneficiary || 0) + (r.sewaGatividhi?.medicalCamp?.curr_eye_beneficiary || 0)).toLocaleString()}</td>
                         <td>{(r.environmentGatividhi?.treePlantation_curr || 0).toLocaleString()}</td>
-                        <td><button className="view-btn" onClick={() => setViewReport(r)}>View</button></td>
+                        <td>
+                          <button className="view-btn" onClick={() => setViewReport(r)}>View</button>
+                          <button className="edit-btn" onClick={() => navigate(`/?edit=${r._id}`)}>Edit</button>
+                        </td>
                       </tr>
                     ))}
                     {/* Prant Total Row */}
@@ -454,7 +460,10 @@ export default function ReportsPage() {
                       <td>{(r.primaryInfo?.tillDate_members || 0).toLocaleString()}</td>
                       <td>&#8377;{(r.primaryInfo?.tillDate_contribution || 0).toLocaleString()}</td>
                       <td>{new Date(r.submittedAt).toLocaleDateString('en-IN')}</td>
-                      <td><button className="view-btn" onClick={() => viewFullReport(r._id)}>View</button></td>
+                      <td>
+                        <button className="view-btn" onClick={() => viewFullReport(r._id)}>View</button>
+                        <button className="edit-btn" onClick={() => navigate(`/?edit=${r._id}`)}>Edit</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -462,7 +471,7 @@ export default function ReportsPage() {
             )}
           </div>
         )}
- 
+
         {/* Project-wise Report */}
         {tab === 'projectwise' && !loading && (
           <div className="report-section printable">
@@ -539,6 +548,7 @@ export default function ReportsPage() {
                 <div className="report-modal-actions">
                   <button className="print-btn" onClick={handlePrint}>Print Report</button>
                   <button className="download-btn" onClick={() => exportCSV(viewReport)}>Download CSV</button>
+                  <button className="edit-btn" onClick={() => { setViewReport(null); navigate(`/?edit=${viewReport._id}`); }}>Edit Report</button>
                   <button className="close-btn" onClick={() => setViewReport(null)}>Close</button>
                 </div>
               </div>

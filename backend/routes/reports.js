@@ -58,6 +58,20 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(403).json({ success: false, message: 'You can only submit reports for your branch' });
     }
  
+    // Prevent duplicate: one report per branch per month/year
+    const existing = await Report.findOne({
+      branchName: req.body.branchName,
+      reportMonth: req.body.reportMonth,
+      reportYear: req.body.reportYear,
+    });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: `Report for ${req.body.branchName} — ${req.body.reportMonth} ${req.body.reportYear} already exists. Please edit the existing report instead.`,
+        existingId: existing._id,
+      });
+    }
+
     const reportData = { ...req.body, submittedBy: req.user.username };
     const report = new Report(reportData);
     const saved = await report.save();

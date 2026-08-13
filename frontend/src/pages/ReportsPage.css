@@ -150,7 +150,14 @@
   cursor: pointer; transition: all 0.2s;
 }
 .view-btn:hover { background: var(--saffron); color: white; }
- 
+
+.edit-btn {
+  padding: 6px 14px; border: 1px solid var(--navy); background: rgba(27,42,59,0.05);
+  color: var(--navy); border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; margin-left: 6px;
+}
+.edit-btn:hover { background: var(--navy); color: white; }
+
 .close-btn {
   padding: 8px 18px; border: 1px solid #ddd; background: white;
   border-radius: 8px; font-size: 13px; cursor: pointer;

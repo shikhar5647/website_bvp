@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { reportAPI } from '../utils/api';
 import toast from 'react-hot-toast';
 import PrintReport, { exportCSV } from '../components/PrintReport';
@@ -322,13 +323,75 @@ function populatePrevFromReport(report) {
 }
 
 export default function DataEntryPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const editId = searchParams.get('edit');
   const [form, setForm] = useState(initialForm);
   const [activeTab, setActiveTab] = useState('branch');
   const [submitting, setSubmitting] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [loadingPrev, setLoadingPrev] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Load report for editing
+  useEffect(() => {
+    if (!editId) { setEditMode(false); return; }
+    setEditLoading(true);
+    reportAPI.getById(editId)
+      .then(res => {
+        const r = res.data.data;
+        const merged = JSON.parse(JSON.stringify(initialForm));
+        for (const key of Object.keys(r)) {
+          if (key === '_id' || key === '__v' || key === 'createdAt' || key === 'updatedAt' || key === 'submittedAt' || key === 'submittedBy') continue;
+          if (key === 'meetings') {
+            merged.meetings = {
+              executive: (r.meetings?.executive || []).map(m => ({ date: m.date ? m.date.split('T')[0] : '', participants: m.participants || 0 })),
+              generalBody: (r.meetings?.generalBody || []).map(m => ({ date: m.date ? m.date.split('T')[0] : '', participants: m.participants || 0 })),
+              workingGroup: (r.meetings?.workingGroup || []).map(m => ({ date: m.date ? m.date.split('T')[0] : '', participants: m.participants || 0 })),
+            };
+            continue;
+          }
+          if (key === 'permanentSewa') {
+            merged.permanentSewa = (r.permanentSewa || []).map(p => ({
+              service: p.service || '',
+              prev_projects: p.prev_projects || 0, prev_beneficiary: p.prev_beneficiary || 0, prev_cost: p.prev_cost || 0,
+              curr_projects: p.curr_projects || 0, curr_beneficiary: p.curr_beneficiary || 0, curr_cost: p.curr_cost || 0,
+            }));
+            continue;
+          }
+          if (typeof r[key] === 'object' && r[key] !== null && !Array.isArray(r[key])) {
+            if (!merged[key]) merged[key] = {};
+            for (const sub of Object.keys(r[key])) {
+              if (sub === '_id') continue;
+              if (typeof r[key][sub] === 'object' && r[key][sub] !== null) {
+                if (!merged[key][sub]) merged[key][sub] = {};
+                for (const field of Object.keys(r[key][sub])) {
+                  if (field === '_id') continue;
+                  merged[key][sub][field] = r[key][sub][field];
+                }
+              } else {
+                merged[key][sub] = r[key][sub];
+              }
+            }
+          } else {
+            merged[key] = r[key];
+          }
+        }
+        setForm(merged);
+        setEditMode(true);
+        setEditLoading(false);
+        toast.success('Report loaded for editing');
+      })
+      .catch(err => {
+        setEditLoading(false);
+        toast.error('Failed to load report for editing');
+        console.error(err);
+      });
+  }, [editId]);
 
   useEffect(() => {
+    if (editMode) return;
     if (!form.branchName || !form.reportMonth || !form.reportYear) return;
     const { month: prevMonth, year: prevYear } = getPrevMonthYear(form.reportMonth, form.reportYear);
     let cancelled = false;
@@ -367,7 +430,7 @@ export default function DataEntryPage() {
       })
       .catch(err => { if (!cancelled) { setLoadingPrev(false); console.warn('Failed to load prev month:', err.message); } });
     return () => { cancelled = true; };
-  }, [form.branchName, form.reportMonth, form.reportYear]);
+  }, [form.branchName, form.reportMonth, form.reportYear, editMode]);
 
   const set = (path, value) => {
     setForm(prev => {
@@ -408,10 +471,16 @@ export default function DataEntryPage() {
           workingGroup: cleanMeetings(form.meetings.workingGroup),
         },
       };
-      await reportAPI.create(payload);
-      toast.success('Report submitted successfully!');
-      setForm(initialForm);
-      setActiveTab('branch');
+      if (editMode && editId) {
+        await reportAPI.update(editId, payload);
+        toast.success('Report updated successfully!');
+        navigate('/reports');
+      } else {
+        await reportAPI.create(payload);
+        toast.success('Report submitted successfully!');
+        setForm(initialForm);
+        setActiveTab('branch');
+      }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to submit. Check backend connection.';
       toast.error(msg);
@@ -445,6 +514,11 @@ export default function DataEntryPage() {
   const handlePrint = () => { setShowPrint(true); setTimeout(() => window.print(), 300); };
   const handleCSV = () => exportCSV(form);
 
+  // ── Loading state for edit mode ─────────────────────────────────────────────
+  if (editLoading) {
+    return <div className="entry-page" style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh'}}><div className="spinner" style={{width:40,height:40}} /></div>;
+  }
+
   // ── Print overlay — uses shared PrintReport component ──────────────────────
   if (showPrint) {
     return <PrintReport form={form} onBack={() => setShowPrint(false)} />;
@@ -465,7 +539,7 @@ export default function DataEntryPage() {
           </div>
           <div className="ss-file-meta">
             <div className="ss-file-name">BVP Paschim Prant</div>
-            <div className="ss-file-org">Shakha Masik Prativedan</div>
+            <div className="ss-file-org">{editMode ? `Editing: ${form.branchName} — ${form.reportMonth} ${form.reportYear}` : 'Shakha Masik Prativedan'}</div>
           </div>
         </div>
         <div className="ss-topbar-right">
@@ -484,7 +558,7 @@ export default function DataEntryPage() {
             CSV
           </button>
           <button className="ss-submit-btn" onClick={handleSubmit} disabled={submitting || activeTab !== TABS[TABS.length-1].id}>
-            {submitting ? <span className="spinner" /> : 'Submit'}
+            {submitting ? <span className="spinner" /> : editMode ? 'Update Report' : 'Submit'}
           </button>
         </div>
       </div>
@@ -944,7 +1018,7 @@ export default function DataEntryPage() {
           <button className="ss-nav-btn ss-nav-submit" onClick={handleSubmit} disabled={submitting}>
             {submitting ? <span className="spinner" /> : (<>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Submit Report
+              {editMode ? 'Update Report' : 'Submit Report'}
             </>)}
           </button>
         )}
