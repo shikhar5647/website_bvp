@@ -320,6 +320,7 @@ const ReportSchema = new mongoose.Schema({
 
   remarks1: { type: String, default: '' },
   remarks2: { type: String, default: '' },
+  remarks: [{ type: String }],
 
   submittedAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

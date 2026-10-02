@@ -738,10 +738,11 @@
 /* ── Print Report View ───────────────────────────────────────────────────── */
 .print-report {
   background: #fff;
-  padding: 32px 40px;
-  max-width: 1100px;
+  padding: 32px 24px;
+  max-width: 100%;
   margin: 0 auto;
   font-family: 'DM Sans', sans-serif;
+  overflow-x: auto;
 }
 
 .print-header {
@@ -939,7 +940,7 @@
 /* ── Print media query ───────────────────────────────────────────────────── */
 @page {
   size: landscape;
-  margin: 10mm;
+  margin: 6mm;
 }
 
 @media print {
@@ -958,6 +959,7 @@
     padding: 0;
     width: 100%;
     max-width: none;
+    overflow: visible;
   }
 
   .print-header {
@@ -972,6 +974,8 @@
   .print-table {
     font-size: 8px;
     width: 100%;
+    table-layout: fixed;
+    word-break: break-word;
   }
   .print-table-fixed {
     table-layout: fixed;

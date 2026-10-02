@@ -140,6 +140,7 @@ const initialForm = {
   },
   remarks1: '',
   remarks2: '',
+  remarks: [''],
 };
 
 const TABS = [
@@ -192,11 +193,15 @@ function Cell({ value, onChange, readOnly, isTotal, isCurrency, isText }) {
   return (
     <input
       ref={ref}
-      type="number"
-      min="0"
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
       className="ss-cell ss-cell-input"
       value={value || 0}
-      onChange={e => onChange && onChange(Number(e.target.value))}
+      onChange={e => {
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        onChange && onChange(raw === '' ? 0 : Number(raw));
+      }}
       onFocus={e => e.target.select()}
     />
   );
@@ -418,6 +423,10 @@ export default function DataEntryPage() {
             merged[key] = r[key];
           }
         }
+        if (!merged.remarks || merged.remarks.length === 0) {
+          const legacy = [merged.remarks1, merged.remarks2].filter(r => r);
+          merged.remarks = legacy.length > 0 ? legacy : [''];
+        }
         setForm(merged);
         setEditMode(true);
         setEditLoading(false);
@@ -506,6 +515,7 @@ export default function DataEntryPage() {
     setSubmitting(true);
     try {
       const cleanMeetings = (arr) => arr.filter(m => m.date);
+      const filteredRemarks = (form.remarks || []).filter(r => r.trim());
       const payload = {
         ...form,
         permanentSewa: form.permanentSewa.filter(p => p.service),
@@ -514,6 +524,9 @@ export default function DataEntryPage() {
           generalBody: cleanMeetings(form.meetings.generalBody),
           workingGroup: cleanMeetings(form.meetings.workingGroup),
         },
+        remarks: filteredRemarks,
+        remarks1: filteredRemarks[0] || '',
+        remarks2: filteredRemarks[1] || '',
       };
       if (editMode && editId) {
         await reportAPI.update(editId, payload);
@@ -1046,26 +1059,40 @@ export default function DataEntryPage() {
                 <div className="ss-sheet-title">Remarks</div>
               </div>
               <div style={{padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12}}>
-                <div>
-                  <label style={{fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block'}}>Remark 1</label>
-                  <textarea
-                    className="ss-cell ss-cell-input"
-                    style={{width: '100%', minHeight: 60, resize: 'vertical', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e0e0e0', fontFamily: 'inherit', fontSize: 14}}
-                    value={form.remarks1}
-                    onChange={e => set('remarks1', e.target.value)}
-                    placeholder="Enter remark 1..."
-                  />
-                </div>
-                <div>
-                  <label style={{fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block'}}>Remark 2</label>
-                  <textarea
-                    className="ss-cell ss-cell-input"
-                    style={{width: '100%', minHeight: 60, resize: 'vertical', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e0e0e0', fontFamily: 'inherit', fontSize: 14}}
-                    value={form.remarks2}
-                    onChange={e => set('remarks2', e.target.value)}
-                    placeholder="Enter remark 2..."
-                  />
-                </div>
+                {(form.remarks || ['']).map((remark, idx) => (
+                  <div key={idx} style={{display: 'flex', gap: 8, alignItems: 'flex-start'}}>
+                    <div style={{flex: 1}}>
+                      <label style={{fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block'}}>Remark {idx + 1}</label>
+                      <textarea
+                        className="ss-cell ss-cell-input"
+                        style={{width: '100%', minHeight: 60, resize: 'vertical', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e0e0e0', fontFamily: 'inherit', fontSize: 14}}
+                        value={remark}
+                        onChange={e => {
+                          const updated = [...(form.remarks || [''])];
+                          updated[idx] = e.target.value;
+                          setForm(prev => ({ ...prev, remarks: updated }));
+                        }}
+                        placeholder={`Enter remark ${idx + 1}...`}
+                      />
+                    </div>
+                    {(form.remarks || ['']).length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(form.remarks || [''])];
+                          updated.splice(idx, 1);
+                          setForm(prev => ({ ...prev, remarks: updated }));
+                        }}
+                        style={{marginTop: 22, padding: '6px 10px', background: '#fee', border: '1px solid #fcc', borderRadius: 6, color: '#c33', cursor: 'pointer', fontSize: 12, fontWeight: 600}}
+                      >Remove</button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, remarks: [...(prev.remarks || ['']), ''] }))}
+                  style={{alignSelf: 'flex-start', padding: '8px 16px', background: '#f0f7ff', border: '1.5px solid #1a73e8', borderRadius: 8, color: '#1a73e8', cursor: 'pointer', fontSize: 13, fontWeight: 600}}
+                >+ Add Remark</button>
               </div>
             </div>
           </div>

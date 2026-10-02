@@ -185,6 +185,7 @@ export default function ReportsPage() {
     if (viewReport) {
       setPrintReport(viewReport);
       setViewReport(null);
+      setTimeout(() => window.print(), 400);
     } else {
       window.print();
     }
@@ -408,7 +409,7 @@ export default function ReportsPage() {
                   <button className="download-btn" onClick={() => exportCSV(buildPrantTotal(consolidated.reports, selectedMonth, selectedYear))}>
                     Download Full Prant CSV
                   </button>
-                  <button className="print-btn" onClick={() => setPrintReport(buildPrantTotal(consolidated.reports, selectedMonth, selectedYear))}>
+                  <button className="print-btn" onClick={() => { setPrintReport(buildPrantTotal(consolidated.reports, selectedMonth, selectedYear)); setTimeout(() => window.print(), 400); }}>
                     Print Full Prant Report
                   </button>
                 </div>

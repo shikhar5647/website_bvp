@@ -17,13 +17,13 @@ function getPrevMonth(month) {
 }
 
 function PrintCombinedTable({ tables, prevLabel, currMonth }) {
-  const GROUP_COLS = 5;
+  const GROUP_COLS = Math.max(5, ...tables.map(t => (t.subCols || ['Value']).length));
   return (
     <table className="print-table print-table-fixed">
       <colgroup>
-        <col style={{ width: '15%' }} />
+        <col style={{ width: '12%' }} />
         {Array.from({ length: GROUP_COLS * 3 }).map((_, i) => (
-          <col key={i} style={{ width: `${85 / (GROUP_COLS * 3)}%` }} />
+          <col key={i} style={{ width: `${88 / (GROUP_COLS * 3)}%` }} />
         ))}
       </colgroup>
       <thead>
@@ -312,8 +312,10 @@ export function exportCSV(form) {
   lines.push('');
 
   lines.push('Remarks');
-  lines.push(`Remarks 1,${esc(form.remarks1 || '')}`);
-  lines.push(`Remarks 2,${esc(form.remarks2 || '')}`);
+  const allRemarks = (form.remarks && form.remarks.length > 0)
+    ? form.remarks.filter(r => r)
+    : [form.remarks1, form.remarks2].filter(r => r);
+  allRemarks.forEach((r, i) => lines.push(`Remark ${i + 1},${esc(r)}`));
   lines.push('');
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -470,13 +472,19 @@ export default function PrintReport({ form, onBack }) {
         </div>
       )}
 
-      {(form.remarks1 || form.remarks2) && (
-        <div className="print-section" style={{ marginTop: '20px' }}>
-          <div className="print-section-title">Remarks</div>
-          {form.remarks1 && <p><strong>Remarks 1:</strong> {form.remarks1}</p>}
-          {form.remarks2 && <p><strong>Remarks 2:</strong> {form.remarks2}</p>}
-        </div>
-      )}
+      {(() => {
+        const allRemarks = (form.remarks && form.remarks.length > 0)
+          ? form.remarks.filter(r => r)
+          : [form.remarks1, form.remarks2].filter(r => r);
+        return allRemarks.length > 0 && (
+          <div className="print-section" style={{ marginTop: '20px' }}>
+            <div className="print-section-title">Remarks</div>
+            <div style={{ padding: '8px 16px' }}>
+              {allRemarks.map((r, i) => <p key={i} style={{ margin: '4px 0' }}><strong>Remark {i + 1}:</strong> {r}</p>)}
+            </div>
+          </div>
+        );
+      })()}
 
       <button className="no-print ss-nav-btn" style={{ margin: '20px auto', display: 'block' }} onClick={onBack}>Back</button>
     </div>
