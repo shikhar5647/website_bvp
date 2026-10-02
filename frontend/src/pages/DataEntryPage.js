@@ -61,8 +61,8 @@ const initialForm = {
     cashBalance:0, bankBalance1:0, bankBalance2:0,
   },
   sanskarGatividhi: {
-    nsgc:         { prev_schools:0, prev_boys:0, prev_girls:0, prev_vadak:0,
-                    curr_schools:0, curr_boys:0, curr_girls:0, curr_vadak:0 },
+    nsgc:         { prev_schools:0, prev_boys:0, prev_girls:0, prev_vadak:0, prev_others:0,
+                    curr_schools:0, curr_boys:0, curr_girls:0, curr_vadak:0, curr_others:0 },
     bharatKoJano: { prev_schools:0, prev_students_jr:0, prev_students_sr:0, prev_books:0,
                     curr_schools:0, curr_students_jr:0, curr_students_sr:0, curr_books:0 },
     gvca:         { prev_schools:0, prev_students_honoured:0, prev_teachers_honoured:0, prev_total_presence:0,
@@ -307,6 +307,44 @@ function populatePrevFromReport(report) {
     }
   }
 
+  // Primary Info: carry forward key fields from previous month
+  if (report.primaryInfo) {
+    const pi = report.primaryInfo;
+    updates.primaryInfo = {
+      year2024_25_members: pi.year2024_25_members || 0,
+      year2024_25_contribution: pi.year2024_25_contribution || 0,
+      target2025_26_members: pi.target2025_26_members || 0,
+      target2025_26_contribution: pi.target2025_26_contribution || 0,
+      tillDate_members: pi.tillDate_members || 0,
+      tillDate_contribution: pi.tillDate_contribution || 0,
+      vikasMitra_base: pi.vikasMitra_base || 0,
+      vikasMitra_tillDate: pi.vikasMitra_tillDate || 0,
+      vikasRatna_base: pi.vikasRatna_base || 0,
+      vikasRatna_tillDate: pi.vikasRatna_tillDate || 0,
+      cashBalance: pi.cashBalance || 0,
+      bankBalance1: pi.bankBalance1 || 0,
+      bankBalance2: pi.bankBalance2 || 0,
+    };
+  }
+
+  // Meetings: carry forward from previous month
+  if (report.meetings) {
+    updates.meetings = {
+      executive: (report.meetings.executive || []).map(m => ({
+        date: m.date ? m.date.split('T')[0] : '',
+        participants: m.participants || 0,
+      })),
+      generalBody: (report.meetings.generalBody || []).map(m => ({
+        date: m.date ? m.date.split('T')[0] : '',
+        participants: m.participants || 0,
+      })),
+      workingGroup: (report.meetings.workingGroup || []).map(m => ({
+        date: m.date ? m.date.split('T')[0] : '',
+        participants: m.participants || 0,
+      })),
+    };
+  }
+
   if (Array.isArray(report.permanentSewa) && report.permanentSewa.length > 0) {
     updates.permanentSewa = report.permanentSewa
       .filter(p => p.service)
@@ -408,6 +446,10 @@ export default function DataEntryPage() {
           for (const section of Object.keys(prevData)) {
             if (section === 'permanentSewa') {
               copy.permanentSewa = prevData.permanentSewa;
+              continue;
+            }
+            if (section === 'meetings') {
+              copy.meetings = prevData.meetings;
               continue;
             }
             if (typeof prevData[section] === 'object' && !Array.isArray(prevData[section])) {
@@ -693,10 +735,11 @@ export default function DataEntryPage() {
                 makeRow('Boys', sg.nsgc.prev_boys, v=>set('sanskarGatividhi.nsgc.prev_boys',v), sg.nsgc.curr_boys, v=>set('sanskarGatividhi.nsgc.curr_boys',v)),
                 makeRow('Girls', sg.nsgc.prev_girls, v=>set('sanskarGatividhi.nsgc.prev_girls',v), sg.nsgc.curr_girls, v=>set('sanskarGatividhi.nsgc.curr_girls',v)),
                 makeRow('Vadak', sg.nsgc.prev_vadak, v=>set('sanskarGatividhi.nsgc.prev_vadak',v), sg.nsgc.curr_vadak, v=>set('sanskarGatividhi.nsgc.curr_vadak',v)),
+                makeRow('Others', sg.nsgc.prev_others, v=>set('sanskarGatividhi.nsgc.prev_others',v), sg.nsgc.curr_others, v=>set('sanskarGatividhi.nsgc.curr_others',v)),
                 { label: 'Total Presence', cells: [
-                  { value: sg.nsgc.prev_boys+sg.nsgc.prev_girls+sg.nsgc.prev_vadak, readOnly: true, isTotal: true },
-                  { value: sg.nsgc.curr_boys+sg.nsgc.curr_girls+sg.nsgc.curr_vadak, readOnly: true, isTotal: true },
-                  { value: sg.nsgc.prev_boys+sg.nsgc.prev_girls+sg.nsgc.prev_vadak+sg.nsgc.curr_boys+sg.nsgc.curr_girls+sg.nsgc.curr_vadak, readOnly: true, isTotal: true },
+                  { value: sg.nsgc.prev_boys+sg.nsgc.prev_girls+sg.nsgc.prev_vadak+sg.nsgc.prev_others, readOnly: true, isTotal: true },
+                  { value: sg.nsgc.curr_boys+sg.nsgc.curr_girls+sg.nsgc.curr_vadak+sg.nsgc.curr_others, readOnly: true, isTotal: true },
+                  { value: sg.nsgc.prev_boys+sg.nsgc.prev_girls+sg.nsgc.prev_vadak+sg.nsgc.prev_others+sg.nsgc.curr_boys+sg.nsgc.curr_girls+sg.nsgc.curr_vadak+sg.nsgc.curr_others, readOnly: true, isTotal: true },
                 ]},
               ]}
             />

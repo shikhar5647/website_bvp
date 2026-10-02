@@ -104,11 +104,11 @@ function buildPrintData(form) {
   const ys = sg.yuvaSanskar || {};
 
   sections.push({ number: 2, title: 'Sanskar Gatividhi', tables: [
-    { title: 'NGSC', subCols: ['Schools','Boys','Girls','Vadak','Total Presence'], projects: [
+    { title: 'NGSC', subCols: ['Schools','Boys','Girls','Vadak','Others','Total Presence'], projects: [
       { label: 'NGSC',
-        prev: [nsgc.prev_schools||0, nsgc.prev_boys||0, nsgc.prev_girls||0, nsgc.prev_vadak||0, (nsgc.prev_boys||0)+(nsgc.prev_girls||0)+(nsgc.prev_vadak||0)],
-        curr: [nsgc.curr_schools||0, nsgc.curr_boys||0, nsgc.curr_girls||0, nsgc.curr_vadak||0, (nsgc.curr_boys||0)+(nsgc.curr_girls||0)+(nsgc.curr_vadak||0)],
-        total: [(nsgc.prev_schools||0)+(nsgc.curr_schools||0), (nsgc.prev_boys||0)+(nsgc.curr_boys||0), (nsgc.prev_girls||0)+(nsgc.curr_girls||0), (nsgc.prev_vadak||0)+(nsgc.curr_vadak||0), (nsgc.prev_boys||0)+(nsgc.prev_girls||0)+(nsgc.prev_vadak||0)+(nsgc.curr_boys||0)+(nsgc.curr_girls||0)+(nsgc.curr_vadak||0)],
+        prev: [nsgc.prev_schools||0, nsgc.prev_boys||0, nsgc.prev_girls||0, nsgc.prev_vadak||0, nsgc.prev_others||0, (nsgc.prev_boys||0)+(nsgc.prev_girls||0)+(nsgc.prev_vadak||0)+(nsgc.prev_others||0)],
+        curr: [nsgc.curr_schools||0, nsgc.curr_boys||0, nsgc.curr_girls||0, nsgc.curr_vadak||0, nsgc.curr_others||0, (nsgc.curr_boys||0)+(nsgc.curr_girls||0)+(nsgc.curr_vadak||0)+(nsgc.curr_others||0)],
+        total: [(nsgc.prev_schools||0)+(nsgc.curr_schools||0), (nsgc.prev_boys||0)+(nsgc.curr_boys||0), (nsgc.prev_girls||0)+(nsgc.curr_girls||0), (nsgc.prev_vadak||0)+(nsgc.curr_vadak||0), (nsgc.prev_others||0)+(nsgc.curr_others||0), (nsgc.prev_boys||0)+(nsgc.prev_girls||0)+(nsgc.prev_vadak||0)+(nsgc.prev_others||0)+(nsgc.curr_boys||0)+(nsgc.curr_girls||0)+(nsgc.curr_vadak||0)+(nsgc.curr_others||0)],
       },
     ]},
     { title: 'Bharat Ko Jano (Written Exam)', subCols: ['Schools','Students (Jr)','Students (Sr)','Total Students','Books'], projects: [
