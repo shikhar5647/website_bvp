@@ -105,7 +105,8 @@ function buildPrantTotal(reports, month, year) {
     ['executive', 'generalBody', 'workingGroup'].forEach(type => {
       (mtg[type] || []).forEach(m => {
         if (m.date) {
-          prant.meetings[type].push({ date: `${r.branchName} — ${m.date}`, participants: m.participants || 0 });
+          const fd = (() => { if (!m.date) return 'N/A'; const d = new Date(m.date); if (isNaN(d.getTime())) return m.date; return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }); })();
+          prant.meetings[type].push({ date: `${r.branchName} — ${fd}`, participants: m.participants || 0 });
         }
       });
     });

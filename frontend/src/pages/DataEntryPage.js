@@ -138,6 +138,8 @@ const initialForm = {
     generalBody: [{ ...defaultMeeting }],
     workingGroup:[{ ...defaultMeeting }],
   },
+  remarks1: '',
+  remarks2: '',
 };
 
 const TABS = [
@@ -1037,6 +1039,35 @@ export default function DataEntryPage() {
                 </button>
               </div>
             ))}
+
+            {/* Remarks */}
+            <div className="ss-sheet">
+              <div className="ss-sheet-header">
+                <div className="ss-sheet-title">Remarks</div>
+              </div>
+              <div style={{padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12}}>
+                <div>
+                  <label style={{fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block'}}>Remark 1</label>
+                  <textarea
+                    className="ss-cell ss-cell-input"
+                    style={{width: '100%', minHeight: 60, resize: 'vertical', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e0e0e0', fontFamily: 'inherit', fontSize: 14}}
+                    value={form.remarks1}
+                    onChange={e => set('remarks1', e.target.value)}
+                    placeholder="Enter remark 1..."
+                  />
+                </div>
+                <div>
+                  <label style={{fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block'}}>Remark 2</label>
+                  <textarea
+                    className="ss-cell ss-cell-input"
+                    style={{width: '100%', minHeight: 60, resize: 'vertical', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e0e0e0', fontFamily: 'inherit', fontSize: 14}}
+                    value={form.remarks2}
+                    onChange={e => set('remarks2', e.target.value)}
+                    placeholder="Enter remark 2..."
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

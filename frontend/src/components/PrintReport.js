@@ -3,6 +3,13 @@ import '../pages/DataEntryPage.css';
 
 const MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
 
+function formatDate(dateStr) {
+  if (!dateStr) return 'N/A';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 function getPrevMonth(month) {
   const idx = MONTHS.indexOf(month);
   if (idx <= 0) return 'Upto March';
@@ -292,7 +299,7 @@ export function exportCSV(form) {
     lines.push(`${label} Meetings`);
     lines.push('Date,Participants');
     (meetings[type] || []).forEach(m => {
-      lines.push(`${m.date || 'N/A'},${m.participants}`);
+      lines.push(`${formatDate(m.date)},${m.participants}`);
     });
     lines.push('');
   });
@@ -302,6 +309,11 @@ export function exportCSV(form) {
   (form.permanentSewa || []).forEach(r => {
     lines.push([esc(r.service||'-'), r.prev_projects||0, r.prev_beneficiary||0, r.prev_cost||0, r.curr_projects||0, r.curr_beneficiary||0, r.curr_cost||0, (r.prev_projects||0)+(r.curr_projects||0), (r.prev_beneficiary||0)+(r.curr_beneficiary||0), (r.prev_cost||0)+(r.curr_cost||0)].join(','));
   });
+  lines.push('');
+
+  lines.push('Remarks');
+  lines.push(`Remarks 1,${esc(form.remarks1 || '')}`);
+  lines.push(`Remarks 2,${esc(form.remarks2 || '')}`);
   lines.push('');
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -408,7 +420,7 @@ export default function PrintReport({ form, onBack }) {
               <thead><tr><th className="print-th">#</th><th className="print-th">Date</th><th className="print-th">Participants</th></tr></thead>
               <tbody>
                 {(meetings[type] || []).map((m, i) => (
-                  <tr key={i}><td className="print-td">{i+1}</td><td className="print-td">{m.date || 'N/A'}</td><td className="print-td">{m.participants}</td></tr>
+                  <tr key={i}><td className="print-td">{i+1}</td><td className="print-td">{formatDate(m.date)}</td><td className="print-td">{m.participants}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -455,6 +467,14 @@ export default function PrintReport({ form, onBack }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {(form.remarks1 || form.remarks2) && (
+        <div className="print-section" style={{ marginTop: '20px' }}>
+          <div className="print-section-title">Remarks</div>
+          {form.remarks1 && <p><strong>Remarks 1:</strong> {form.remarks1}</p>}
+          {form.remarks2 && <p><strong>Remarks 2:</strong> {form.remarks2}</p>}
         </div>
       )}
 
